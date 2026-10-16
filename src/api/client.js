@@ -31,6 +31,13 @@ function resolveInitialApiBase() {
     return `http://${host}:${API_PORT}`;
   }
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location) {
+    try {
+      if (window.localStorage) {
+        const stored = window.localStorage.getItem('SOMPHEAREAK_API_URL');
+        if (stored) return stored.replace(/\/+$/, '');
+      }
+    } catch (e) {}
+
     const { protocol, hostname, port, origin } = window.location;
     // If served directly by backend Python server on port 5000 / 5001, use same origin
     if (port === '5000' || port === '5001') {

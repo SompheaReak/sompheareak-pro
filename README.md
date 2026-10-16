@@ -35,7 +35,20 @@ npm start
 
 ## 🌐 Deploy as a Website
 
-### Option 1: Vercel (Recommended — One Click)
+### Option 1: Render (Recommended — Zero-Config Blueprint)
+1. Push this repository to GitHub (`sompheareak-pro`).
+2. Go to [Render Dashboard](https://dashboard.render.com/) > **New** > **Blueprint** (or **Static Site**).
+3. Connect your `sompheareak-pro` repository.
+4. Render automatically applies the included `render.yaml`:
+   - **Service Type**: Static Site
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+   - **SPA Route Rewrite**: `/* -> /index.html` (prevents 404 on sub-routes)
+5. *(Optional)* Set Environment Variable in Render:
+   - `EXPO_PUBLIC_API_URL`: Your backend API URL (e.g. `https://sompheareak-api.onrender.com`)
+6. Click **Apply** / **Create Static Site**!
+
+### Option 2: Vercel
 1. Push this repository to GitHub (`sompheareak-pro`).
 2. Go to [Vercel Dashboard](https://vercel.com/new) and import your `sompheareak-pro` repository.
 3. Vercel automatically detects the build configuration via `vercel.json`:

@@ -7,6 +7,9 @@
   "homepage": "https://sompheareak.com",
   "private": true,
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "EXPO_NO_TELEMETRY=1 expo start --port 8081",
     "android": "EXPO_NO_TELEMETRY=1 expo start --android",
