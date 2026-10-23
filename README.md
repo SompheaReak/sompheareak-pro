@@ -7,7 +7,7 @@ The official customer-facing e-commerce storefront for **Somphea Reak (សម្
 - **Styling**: Tailwind CSS + Framer Motion + Lucide Icons
 - **Database**: Neon Serverless PostgreSQL (`@neondatabase/serverless`)
 - **Hosting**: Render.com Web Service
-- **Companion App**: [sompheareak-admin](https://github.com/Mingstar556/sompheareak-admin) (Dedicated Admin Suite sharing the same Neon DB)
+- **Companion App**: [sompheareak-admin](https://github.com/Sompheareak/sompheareak-admin) (Dedicated Admin Suite sharing the same Neon DB)
 
 ## 📦 Features
 - 🍱 **Top Category Bento Grid**: Visually stunning bento cards highlighting key categories.
@@ -20,15 +20,12 @@ The official customer-facing e-commerce storefront for **Somphea Reak (សម្
 ## 🛠️ Deploy to Render.com
 
 1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Web Service**.
-2. Connect your GitHub repository `Mingstar556/sompheareak-pro`.
-3. Configure the settings:
+2. Connect your GitHub repository `Sompheareak/sompheareak-pro`.
+3. Configure settings:
    - **Environment**: `Node`
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm start`
 4. Add the following **Environment Variables**:
-   - `DATABASE_URL`: Your Neon PostgreSQL connection string:
-     ```
-     postgresql://neondb_owner:YOUR_PASSWORD@ep-YOUR-PROJECT.us-east-2.aws.neon.tech/neondb?sslmode=require
-     ```
+   - `DATABASE_URL`: `postgresql://neondb_owner:npg_Pr8eQM1XAKJc@ep-blue-resonance-azj4thpc-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
    - `NEXT_PUBLIC_ADMIN_URL`: URL to your deployed `sompheareak-admin` web service.
 5. Click **Deploy Web Service**.
