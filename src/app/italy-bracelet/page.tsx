@@ -11,7 +11,6 @@ import { CartDrawer } from "@/components/CartDrawer";
 import { CheckoutModal } from "@/components/CheckoutModal";
 import { RewardsModal } from "@/components/RewardsModal";
 import { NotificationToast } from "@/components/NotificationToast";
-import { CustomerBar } from "@/components/CustomerBar";
 import { CustomerAccountModal } from "@/components/CustomerAccountModal";
 import { OrderHistoryModal } from "@/components/OrderHistoryModal";
 import { OrderReceiptModal } from "@/components/OrderReceiptModal";
@@ -73,20 +72,14 @@ export default function ItalyBraceletPage() {
       <Navbar />
 
       {/* 3. Dedicated Hero Section for Italy Bracelet */}
-      <section className="relative overflow-hidden pt-8 pb-12 sm:pt-12 sm:pb-16 px-4 max-w-7xl mx-auto">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/3 -translate-x-1/2 w-96 h-96 bg-emerald-500/15 dark:bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-10 right-10 w-80 h-80 bg-amber-400/15 dark:bg-toy-yellow/15 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="text-center max-w-4xl mx-auto relative z-10 space-y-5">
-          {/* Top Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-600/40 text-emerald-800 dark:text-emerald-300 text-xs font-black uppercase tracking-wider font-fredoka shadow-sm">
-            <Sparkles className="w-4 h-4 text-emerald-500 animate-spin" style={{ animationDuration: "6s" }} />
+      <section className="relative overflow-hidden pt-6 pb-2 sm:pt-8 sm:pb-4 px-4 max-w-4xl mx-auto text-center">
+        <div className="space-y-2 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-600/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider font-fredoka shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-spin" style={{ animationDuration: "6s" }} />
             <span>AUTHENTIC 9MM ITALIAN MODULAR CHARM SYSTEM</span>
           </div>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white font-fredoka tracking-tight leading-[1.12]">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white font-fredoka tracking-tight">
             DESIGN YOUR{" "}
             <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-green-600 dark:from-toy-yellow dark:via-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
               ITALIAN CHARM
@@ -94,34 +87,9 @@ export default function ItalyBraceletPage() {
             BRACELET
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
-            Assemble your personal story link by link. Built with high-grade 316L waterproof surgical stainless steel and interlocking mechanical spring notches.
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium max-w-xl mx-auto">
+            Assemble your personal story link by link with 316L waterproof surgical stainless steel and interlocking spring notches.
           </p>
-
-          {/* Value Badges */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-toy-green" />
-              <span>316L Surgical Inox</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <Droplets className="w-4 h-4 text-teal-600 dark:text-toy-cyan" />
-              <span>100% Waterproof & Tarnish-Free</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <Layers className="w-4 h-4 text-amber-500" />
-              <span>Interlocking Spring Hinges</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <Truck className="w-4 h-4 text-emerald-600" />
-              <span>Phnom Penh Express</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400/50 dark:border-emerald-700/60 shadow-sm text-emerald-800 dark:text-emerald-300">
-              <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Share & Apply Friend Styles 🔗</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -271,9 +239,6 @@ export default function ItalyBraceletPage() {
       <CustomerAccountModal />
       <OrderHistoryModal />
       <OrderReceiptModal />
-
-      {/* Floating Bottom Customer Bar */}
-      <CustomerBar />
     </main>
   );
 }

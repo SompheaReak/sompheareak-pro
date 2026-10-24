@@ -201,4 +201,57 @@ export function getCharmCode(c: Charm, catalog?: Charm[]): string {
   return generateUniqueCharmCode(c, catalog || []);
 }
 
-export const CHARMS: Charm[] = [];
+export const DEFAULT_STUDIO_CHARMS: Charm[] = [
+  // Row 1: 8 Base Link Frames (Silver, Red, Yellow, Cream/Gold, Black, Green, Blue, Pink)
+  { id: "base-silver", code: "L01", name: "Silver Link", nameKh: "តំណប្រាក់ Silver", category: "base", price: 0.73, image: "/assets/links_tight/link_plain.webp" },
+  { id: "base-red", code: "L02", name: "Red Link", nameKh: "តំណក្រហម Red", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_1.webp" },
+  { id: "base-yellow", code: "L03", name: "Yellow Link", nameKh: "តំណលឿង Yellow", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_2.webp" },
+  { id: "base-gold", code: "L04", name: "Gold Link", nameKh: "តំណមាស Gold", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_3.webp" },
+  { id: "base-black", code: "L05", name: "Black Link", nameKh: "តំណខ្មៅ Black", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_4.webp" },
+  { id: "base-green", code: "L06", name: "Green Link", nameKh: "តំណបៃតង Green", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_5.webp" },
+  { id: "base-blue", code: "L07", name: "Blue Link", nameKh: "តំណខៀវ Blue", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_6.webp" },
+  { id: "base-pink", code: "L08", name: "Pink Link", nameKh: "តំណផ្កាឈូក Pink", category: "base", price: 0.73, image: "/assets/links_tight/link_new_style_7.webp" },
+
+  // Row 2: Pinkystar Series
+  { id: "pinkystar-0", code: "P01", name: "Pink Star", nameKh: "ផ្កាយផ្កាឈូក", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_0.webp" },
+  { id: "pinkystar-1", code: "P02", name: "Pink Floral", nameKh: "ផ្កាផ្កាឈូក", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_1.webp" },
+  { id: "pinkystar-2", code: "P03", name: "Retro Blossom", nameKh: "ផ្ការីក Retro", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_2.webp" },
+  { id: "pinkystar-3", code: "P04", name: "Hypnotic Heart", nameKh: "បេះដូងស្នេហ៍", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_3.webp" },
+  { id: "pinkystar-4", code: "P05", name: "Sweet Star", nameKh: "ផ្កាយផ្អែមល្ហែម", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_4.webp" },
+  { id: "pinkystar-5", code: "P06", name: "Checkered Heart", nameKh: "បេះដូងក្រឡា", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_5.webp" },
+  { id: "pinkystar-6", code: "P07", name: "Graffiti Star", nameKh: "ផ្កាយ Graffiti", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_6.webp" },
+  { id: "pinkystar-7", code: "P08", name: "Sweet Kitty", nameKh: "កូនឆ្មាផ្អែមល្ហែម", category: "pinky", price: 0.73, image: "/assets/charms_tight/pinkystar_7.webp" },
+
+  // Row 3: Slay Series
+  { id: "slay-0", code: "S01", name: "Retro Star", nameKh: "ផ្កាយបុរាណ", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_0.webp" },
+  { id: "slay-1", code: "S02", name: "Dark Heart", nameKh: "បេះដូងខ្មៅ", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_1.webp" },
+  { id: "slay-2", code: "S03", name: "Wild Floral", nameKh: "ផ្កាព្រៃ", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_2.webp" },
+  { id: "slay-3", code: "S04", name: "Life Is Sweet", nameKh: "ជីវិតស្រស់បំព្រង", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_3.webp" },
+  { id: "slay-4", code: "S05", name: "Love Music", nameKh: "តន្ត្រីស្នេហ៍", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_4.webp" },
+  { id: "slay-5", code: "S06", name: "Lucky Emblem", nameKh: "ផ្លាកសំណាង", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_5.webp" },
+  { id: "slay-6", code: "S07", name: "Ocean Waves", nameKh: "រលកសមុទ្រ", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_6.webp" },
+  { id: "slay-7", code: "S08", name: "Dumb Days", nameKh: "Dumb Days", category: "slay", price: 0.73, image: "/assets/charms_tight/slay_7.webp" },
+
+  // Row 4: Pet Series
+  { id: "dogcat-0", code: "D01", name: "Playful Kitten", nameKh: "កូនឆ្មាកម្សាន្ត", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_0.webp" },
+  { id: "dogcat-1", code: "D02", name: "Happy Pup", nameKh: "កូនឆ្កែរីករាយ", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_1.webp" },
+  { id: "dogcat-2", code: "D03", name: "Fluffy Dog", nameKh: "ឆ្កែទន់រលោង", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_2.webp" },
+  { id: "dogcat-3", code: "D04", name: "Sleepy Cat", nameKh: "ឆ្មាដេកលក់", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_3.webp" },
+  { id: "dogcat-4", code: "D05", name: "Brown Puppy", nameKh: "កូនឆ្កែត្នោត", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_4.webp" },
+  { id: "dogcat-5", code: "D06", name: "Curious Cat", nameKh: "ឆ្មាឆ្លាត", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_5.webp" },
+  { id: "dogcat-6", code: "D07", name: "Best Buddies", nameKh: "មិត្តសម្លាញ់", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_6.webp" },
+  { id: "dogcat-7", code: "D08", name: "Love Animals", nameKh: "ស្រឡាញ់សត្វ", category: "pets", price: 0.73, image: "/assets/charms_tight/dog__cat_7.webp" },
+
+  // Row 5: Quartz Series
+  { id: "quart-0", code: "Q01", name: "Quartz Star", nameKh: "ត្បូងផ្កាយ Quartz", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_0.webp" },
+  { id: "quart-1", code: "Q02", name: "Golden Clover", nameKh: "ផ្កាសំណាងមាស", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_1.webp" },
+  { id: "quart-2", code: "Q03", name: "Sapphire Gem", nameKh: "ត្បូងកណ្តៀង Sapphire", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_2.webp" },
+  { id: "quart-3", code: "Q04", name: "Diamond Heart", nameKh: "ពេជ្របេះដូង Diamond", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_3.webp" },
+  { id: "quart-4", code: "Q05", name: "Emerald Flower", nameKh: "ផ្កាត្បូងមរកត Emerald", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_4.webp" },
+  { id: "quart-5", code: "Q06", name: "Ruby Cross", nameKh: "ត្បូងទទឹម Ruby", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_5.webp" },
+  { id: "quart-6", code: "Q07", name: "Butterfly Jewel", nameKh: "មេអំបៅត្បូង Butterfly", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_6.webp" },
+  { id: "quart-7", code: "Q08", name: "Moonlight Gem", nameKh: "ត្បូងពន្លឺព្រះចន្ទ", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_7.webp" },
+];
+
+export const CHARMS: Charm[] = DEFAULT_STUDIO_CHARMS;
+

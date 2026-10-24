@@ -54,7 +54,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 transition-colors shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 h-20 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo - Click to Refresh or Return Home */}
         <a
           href="/"
@@ -69,9 +69,9 @@ export const Navbar: React.FC = () => {
             }
           }}
           title="Somphea Reak Home (Click to Return or Refresh)"
-          className="flex items-center gap-2 sm:gap-3 group select-none shrink-0 cursor-pointer"
+          className="flex items-center gap-1.5 sm:gap-3 group select-none min-w-0 cursor-pointer shrink-0"
         >
-          <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-toy-green-glow group-hover:scale-105 active:scale-95 transition-transform duration-300">
+          <div className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-toy-green-glow group-hover:scale-105 active:scale-95 transition-transform duration-300 shrink-0">
             <div className="w-full h-full rounded-xl sm:rounded-2xl overflow-hidden relative bg-slate-900">
               <Image
                 src="/assets/logo.jpg"
@@ -85,16 +85,16 @@ export const Navbar: React.FC = () => {
             <span className="absolute -bottom-1 -right-1 text-xs animate-bounce hidden sm:inline">✨</span>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1 sm:gap-1.5">
-              <span className="text-base sm:text-2xl font-black font-fredoka tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+              <span className="text-xs sm:text-2xl font-black font-fredoka tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors whitespace-nowrap">
                 SOMPHEA REAK
               </span>
-              <span className="px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md sm:rounded-lg bg-emerald-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-sm">
+              <span className="px-1 py-0.2 sm:px-2 sm:py-0.5 rounded-md sm:rounded-lg bg-emerald-600 text-white text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-sm shrink-0">
                 V2
               </span>
             </div>
-            <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wide uppercase line-clamp-1">
+            <p className="text-[8px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wide uppercase line-clamp-1">
               សម្ភារៈ • Toy & Charm Studio
             </p>
           </div>
@@ -116,7 +116,7 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Actions & Toolbars */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
           {/* VIP Rewards Club Pill */}
           <button
             onClick={() => {
@@ -130,20 +130,30 @@ export const Navbar: React.FC = () => {
             <span>{userPoints} pt</span>
           </button>
 
-          {/* Currency Switcher ($ / ៛) */}
+          {/* Light / Dark Mode Toggle (Replaced Dollar to Khmer button) */}
           <button
-            onClick={toggleCurrency}
-            className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-xs font-black text-slate-800 dark:text-slate-200 transition-all active:scale-95 flex items-center gap-1 shadow-sm"
-            title="Toggle Currency (USD / KHR)"
+            onClick={() => {
+              sounds.playPop();
+              toggleTheme();
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-amber-400 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-all active:scale-95 shadow-sm shrink-0"
+            title="Toggle Dark / Light Theme"
+            aria-label="Toggle Dark / Light Theme"
           >
-            <span className="text-amber-500 dark:text-toy-yellow font-black">{currency === "USD" ? "$" : "៛"}</span>
-            <span className="text-[10px] sm:text-[11px] font-bold">{currency}</span>
+            {themeMode === "dark" ? (
+              <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-toy-yellow" />
+            ) : (
+              <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+            )}
           </button>
 
           {/* Language Switcher (EN / KM) */}
           <button
-            onClick={toggleLanguage}
-            className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-xs font-black text-slate-800 dark:text-slate-200 transition-all active:scale-95 flex items-center gap-1 shadow-sm"
+            onClick={() => {
+              sounds.playPop();
+              toggleLanguage();
+            }}
+            className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-xs font-black text-slate-800 dark:text-slate-200 transition-all active:scale-95 flex items-center gap-1 shadow-sm shrink-0"
             title="Toggle Language (English / Khmer)"
           >
             <span className="text-xs sm:text-sm">{language === "en" ? "🇬🇧" : "🇰🇭"}</span>
@@ -152,7 +162,10 @@ export const Navbar: React.FC = () => {
 
           {/* Sound FX Toggle (🔊 / 🔇) */}
           <button
-            onClick={toggleSound}
+            onClick={() => {
+              sounds.playPop();
+              toggleSound();
+            }}
             className={`hidden sm:flex w-9 h-9 rounded-xl border items-center justify-center transition-all active:scale-95 shadow-sm ${
               soundEnabled
                 ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-toy-green hover:border-emerald-500"
@@ -161,19 +174,6 @@ export const Navbar: React.FC = () => {
             title={soundEnabled ? "Sound Effects Enabled" : "Sound Effects Muted"}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
-
-          {/* Theme Toggle (🌙 / ☀️) */}
-          <button
-            onClick={toggleTheme}
-            className="hidden sm:flex w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-amber-400 items-center justify-center text-slate-700 dark:text-slate-300 transition-all active:scale-95 shadow-sm"
-            title="Toggle Dark / Light Theme"
-          >
-            {themeMode === "dark" ? (
-              <Moon className="w-4 h-4 text-toy-yellow" />
-            ) : (
-              <Sun className="w-4 h-4 text-amber-500" />
-            )}
           </button>
 
           {/* Order History & Receipts Button */}
@@ -213,7 +213,7 @@ export const Navbar: React.FC = () => {
               sounds.playPop();
               setCartDrawerOpen(true);
             }}
-            className="relative px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs font-fredoka flex items-center gap-2 shadow-toy-green-glow border border-emerald-400/30 transition-all hover:scale-105 active:scale-95 select-none"
+            className="relative p-2 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs font-fredoka flex items-center gap-1.5 sm:gap-2 shadow-toy-green-glow border border-emerald-400/30 transition-all hover:scale-105 active:scale-95 select-none shrink-0"
             title="Open Cart"
           >
             <ShoppingBag className="w-4 h-4" />
@@ -223,7 +223,7 @@ export const Navbar: React.FC = () => {
                 key={cartCount}
                 initial={{ scale: 0.5 }}
                 animate={{ scale: [1.3, 1] }}
-                className="w-5 h-5 rounded-full bg-toy-yellow text-slate-950 font-black text-[11px] flex items-center justify-center shadow-md -mr-1"
+                className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-toy-yellow text-slate-950 font-black text-[10px] sm:text-[11px] flex items-center justify-center shadow-md sm:-mr-1"
               >
                 {cartCount}
               </motion.span>
@@ -232,10 +232,13 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Menu Toggle Button */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300"
+            onClick={() => {
+              sounds.playPop();
+              setMobileMenuOpen(!mobileMenuOpen);
+            }}
+            className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
         </div>
       </div>
@@ -287,6 +290,45 @@ export const Navbar: React.FC = () => {
               <User className="w-4 h-4 text-emerald-500" />
               <span>{isCustomerLoggedIn && customerUser ? `My Profile (${customerUser.name})` : "Customer Sign In"}</span>
             </button>
+
+            {/* Quick Theme Toggle in Mobile Menu */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Display Theme:</span>
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  toggleTheme();
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs font-black text-slate-800 dark:text-slate-200 shadow-sm font-fredoka active:scale-95 transition-all"
+              >
+                {themeMode === "dark" ? (
+                  <>
+                    <Moon className="w-3.5 h-3.5 text-toy-yellow" />
+                    <span>Dark Mode 🌙</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Light Mode ☀️</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Quick Currency Switch in Mobile Menu */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Currency ($ / ៛):</span>
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  toggleCurrency();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs font-black text-slate-800 dark:text-slate-200 shadow-sm font-fredoka active:scale-95 transition-all"
+              >
+                <span className="text-amber-500 dark:text-toy-yellow font-black">{currency === "USD" ? "$" : "៛"}</span>
+                <span>{currency === "USD" ? "USD ($)" : "KHR (៛)"}</span>
+              </button>
+            </div>
 
             <div className="pt-2 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">VIP Points:</span>

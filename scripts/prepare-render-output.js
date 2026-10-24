@@ -48,7 +48,7 @@ function prepareOutputDir(targetDirName) {
   }
 
   // 4. Ensure index.html and clean route subdirectories exist
-  const pages = ["cart", "bracelet", "italy-bracelet", "admin", "admin-panel"];
+  const pages = ["cart", "bracelet", "italy-bracelet", "custom-bracelet", "admin", "admin-panel"];
   pages.forEach((page) => {
     const pageHtml = path.join(targetDir, `${page}.html`);
     const pageDir = path.join(targetDir, page);
