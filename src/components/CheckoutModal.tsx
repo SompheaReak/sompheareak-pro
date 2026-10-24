@@ -104,7 +104,7 @@ export const CheckoutModal: React.FC = () => {
       currency,
     });
 
-    const shareUrl = getTelegramShareUrl(telegramMsg, "sompheareak");
+    const shareUrl = getTelegramShareUrl(telegramMsg, "Somphea_reak");
 
     sounds.playFanfare();
     confetti({
@@ -114,9 +114,10 @@ export const CheckoutModal: React.FC = () => {
       colors: ["#10b981", "#fbbf24", "#f43f5e", "#6366f1"],
     });
 
-    addPoints(totalPoints);
+    // NOTE: VIP Points are NOT awarded immediately upon placing order.
+    // They will be awarded once the store confirms the order.
 
-    // Save order so Admin Panel can view and fulfill it
+    // Save order so Admin Panel can view, confirm, and fulfill it
     const newOrder: CustomerOrder = {
       id: `ord-${Date.now()}`,
       orderRef,
@@ -135,10 +136,20 @@ export const CheckoutModal: React.FC = () => {
       pointsEarned: totalPoints,
       voucherCodeApplied: activeVoucher?.code || null,
       status: "pending",
+      pointsAwarded: false,
+      stockDeducted: false,
       createdAt: new Date().toISOString(),
     };
 
     saveOrder(newOrder);
+
+    // Save orderRef in client storage to auto-credit points when confirmed
+    if (typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
+        localStorage.setItem("somphea_my_order_refs", JSON.stringify([...stored, orderRef]));
+      } catch {}
+    }
 
     setSubmittedOrder({
       orderRef,
@@ -148,6 +159,15 @@ export const CheckoutModal: React.FC = () => {
       order: newOrder,
     });
     clearCart();
+
+    // Auto-redirect to Telegram @Somphea_reak with pre-filled order details
+    if (typeof window !== "undefined") {
+      try {
+        window.open(shareUrl, "_blank");
+      } catch {
+        window.location.href = shareUrl;
+      }
+    }
   };
 
   const handleClose = () => {
@@ -157,6 +177,9 @@ export const CheckoutModal: React.FC = () => {
   };
 
   if (!checkoutModalOpen) return null;
+
+  const isPhnomPenh = (prov: string) =>
+    prov.toLowerCase().includes("phnom penh") || prov.includes("ភ្នំពេញ");
 
   return (
     <AnimatePresence>
@@ -243,7 +266,15 @@ export const CheckoutModal: React.FC = () => {
                   </label>
                   <select
                     value={form.province}
-                    onChange={(e) => setForm({ ...form, province: e.target.value })}
+                    onChange={(e) => {
+                      const newProv = e.target.value;
+                      const isPP = isPhnomPenh(newProv);
+                      setForm((prev) => ({
+                        ...prev,
+                        province: newProv,
+                        paymentMethod: isPP ? prev.paymentMethod : "khqr",
+                      }));
+                    }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none cursor-pointer"
                   >
                     {cambodiaProvinces.map((prov) => (
@@ -271,21 +302,40 @@ export const CheckoutModal: React.FC = () => {
 
                 {/* Payment Method */}
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">{t("paymentMethod")}</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {t("paymentMethod")}
+                    </label>
+                    {!isPhnomPenh(form.province) && (
+                      <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                        🔒 Provinces: ABA KHQR Only
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
+                      disabled={!isPhnomPenh(form.province)}
                       onClick={() => {
+                        if (!isPhnomPenh(form.province)) return;
                         sounds.playPop();
                         setForm({ ...form, paymentMethod: "cod" });
                       }}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all ${
-                        form.paymentMethod === "cod"
-                          ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-md"
-                          : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-850"
+                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all relative ${
+                        !isPhnomPenh(form.province)
+                          ? "opacity-45 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
+                          : form.paymentMethod === "cod"
+                          ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-md cursor-pointer"
+                          : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-850 cursor-pointer"
                       }`}
                     >
-                      {t("cod")}
+                      <div className="flex items-center justify-between">
+                        <span>{t("cod")}</span>
+                        {!isPhnomPenh(form.province) && <span className="text-[10px]">🔒</span>}
+                      </div>
+                      <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                        {isPhnomPenh(form.province) ? "Phnom Penh delivery" : "Phnom Penh only"}
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -293,15 +343,24 @@ export const CheckoutModal: React.FC = () => {
                         sounds.playPop();
                         setForm({ ...form, paymentMethod: "khqr" });
                       }}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all ${
+                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
                         form.paymentMethod === "khqr"
-                          ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-white shadow-toy-green-glow"
+                          ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-white shadow-toy-green-glow ring-2 ring-emerald-500/30"
                           : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-850"
                       }`}
                     >
-                      {t("khqr")}
+                      <div>{t("khqr")}</div>
+                      <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                        Online payment (All Cambodia)
+                      </div>
                     </button>
                   </div>
+                  {!isPhnomPenh(form.province) && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-2 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200 dark:border-amber-800/40">
+                      <span>ℹ️</span>
+                      <span>Delivery to provinces outside Phnom Penh requires ABA KHQR online payment.</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Submit Button */}
@@ -348,7 +407,10 @@ export const CheckoutModal: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <span>VIP Points Earned:</span>
+                  <div>
+                    <span>VIP Points:</span>
+                    <span className="text-[10px] text-slate-400 block font-normal">Credited once order is confirmed</span>
+                  </div>
                   <span className="font-bold text-emerald-600 dark:text-toy-green">+{submittedOrder.points} pt</span>
                 </div>
 

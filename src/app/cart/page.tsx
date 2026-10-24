@@ -181,7 +181,7 @@ export default function CartPage() {
       currency,
     });
 
-    const shareUrl = getTelegramShareUrl(telegramMsg, "sompheareak");
+    const shareUrl = getTelegramShareUrl(telegramMsg, "Somphea_reak");
 
     sounds.playFanfare();
     confetti({
@@ -191,7 +191,8 @@ export default function CartPage() {
       colors: ["#10b981", "#fbbf24", "#f43f5e", "#6366f1"],
     });
 
-    addPoints(totalPoints);
+    // NOTE: VIP Points are NOT awarded immediately upon placing order.
+    // They will be awarded once the store confirms the order.
 
     // Construct and save order for owner admin panel management
     const newOrder: CustomerOrder = {
@@ -212,10 +213,20 @@ export default function CartPage() {
       pointsEarned: totalPoints,
       voucherCodeApplied: activeVoucher?.code || null,
       status: "pending",
+      pointsAwarded: false,
+      stockDeducted: false,
       createdAt: new Date().toISOString(),
     };
 
     saveOrder(newOrder);
+
+    // Save orderRef in client storage to auto-credit points when confirmed
+    if (typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
+        localStorage.setItem("somphea_my_order_refs", JSON.stringify([...stored, orderRef]));
+      } catch {}
+    }
 
     setSubmittedOrder({
       orderRef,
@@ -225,6 +236,15 @@ export default function CartPage() {
       order: newOrder,
     });
     clearCart();
+
+    // Auto-redirect to Telegram @Somphea_reak with pre-filled order details
+    if (typeof window !== "undefined") {
+      try {
+        window.open(shareUrl, "_blank");
+      } catch {
+        window.location.href = shareUrl;
+      }
+    }
   };
 
   return (
@@ -575,7 +595,15 @@ export default function CartPage() {
                         </label>
                         <select
                           value={form.province}
-                          onChange={(e) => setForm({ ...form, province: e.target.value })}
+                          onChange={(e) => {
+                            const newProv = e.target.value;
+                            const isPP = newProv.toLowerCase().includes("phnom penh") || newProv.includes("ភ្នំពេញ");
+                            setForm((prev) => ({
+                              ...prev,
+                              province: newProv,
+                              paymentMethod: isPP ? prev.paymentMethod : "khqr",
+                            }));
+                          }}
                           className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none cursor-pointer"
                         >
                           {cambodiaProvinces.map((prov) => (
@@ -602,23 +630,40 @@ export default function CartPage() {
 
                       {/* Payment Method */}
                       <div>
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                          {t("paymentMethod")}
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            {t("paymentMethod")}
+                          </label>
+                          {!(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ")) && (
+                            <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                              🔒 Provinces: ABA KHQR Only
+                            </span>
+                          )}
+                        </div>
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
+                            disabled={!(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ"))}
                             onClick={() => {
+                              if (!(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ"))) return;
                               sounds.playPop();
                               setForm({ ...form, paymentMethod: "cod" });
                             }}
-                            className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                              form.paymentMethod === "cod"
-                                ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-sm"
-                                : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                            className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all relative ${
+                              !(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ"))
+                                ? "opacity-45 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
+                                : form.paymentMethod === "cod"
+                                ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-sm cursor-pointer"
+                                : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 cursor-pointer"
                             }`}
                           >
-                            {t("cod")}
+                            <div className="flex items-center justify-between">
+                              <span>{t("cod")}</span>
+                              {!(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ")) && <span className="text-[10px]">🔒</span>}
+                            </div>
+                            <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                              {(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ")) ? "Phnom Penh delivery" : "Phnom Penh only"}
+                            </div>
                           </button>
                           <button
                             type="button"
@@ -626,15 +671,24 @@ export default function CartPage() {
                               sounds.playPop();
                               setForm({ ...form, paymentMethod: "khqr" });
                             }}
-                            className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
+                            className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
                               form.paymentMethod === "khqr"
-                                ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-white shadow-sm"
+                                ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-white shadow-sm ring-2 ring-emerald-500/30"
                                 : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                             }`}
                           >
-                            {t("khqr")}
+                            <div>{t("khqr")}</div>
+                            <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                              Online payment (All Cambodia)
+                            </div>
                           </button>
                         </div>
+                        {!(form.province.toLowerCase().includes("phnom penh") || form.province.includes("ភ្នំពេញ")) && (
+                          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-1.5 flex items-center gap-1">
+                            <span>ℹ️</span>
+                            <span>Orders to provinces outside Phnom Penh require ABA KHQR online payment.</span>
+                          </p>
+                        )}
                       </div>
 
                       {/* Place Multi-Item Order Button */}
@@ -674,8 +728,11 @@ export default function CartPage() {
                     {formatPrice(submittedOrder.totalUsd, currency)}
                   </span>
                 </div>
-                <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                  <span>VIP Points Earned:</span>
+                <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                  <div>
+                    <span>VIP Points:</span>
+                    <span className="text-[10px] text-slate-400 block font-normal">Credited once order is confirmed</span>
+                  </div>
                   <span className="font-bold text-emerald-600 dark:text-toy-green">+{submittedOrder.points} pt</span>
                 </div>
               </div>

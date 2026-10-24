@@ -15,7 +15,7 @@ export const AnnouncementBar: React.FC = () => {
     "🎟️ COLLECT POINTS & REDEEM INSTANT 10% VOUCHERS",
     "🇰🇭 EXCHANGE: $1 USD = 4,100 KHR",
     "🚀 EXPRESS DELIVERY IN PHNOM PENH & PROVINCES",
-    "📱 TELEGRAM FAST ORDER: @sompheareak",
+    "📱 TELEGRAM FAST ORDER: @Somphea_reak",
   ];
 
   return (

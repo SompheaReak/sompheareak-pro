@@ -81,14 +81,14 @@ export const Footer: React.FC = () => {
               Have questions or want custom recommendations? Chat with our team anytime!
             </p>
             <a
-              href="https://t.me/sompheareak"
+              href="https://t.me/Somphea_reak"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => sounds.playPop()}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8bc0] text-white font-black text-xs font-fredoka shadow-md transition-all active:scale-95"
             >
               <MessageCircle className="w-4 h-4 fill-white" />
-              <span>@sompheareak on Telegram</span>
+              <span>@Somphea_reak on Telegram</span>
             </a>
           </div>
 

@@ -42,7 +42,7 @@ export function buildTelegramOrderMessage({
   totalPoints: number;
   currency: Currency;
 }): string {
-  const paymentTitle = form.paymentMethod === "khqr" ? "📲 ABA KHQR (Scan to Pay)" : "💵 Cash on Delivery (COD)";
+  const paymentTitle = form.paymentMethod === "khqr" ? "📲 ABA KHQR (Online Payment)" : "💵 Cash on Delivery (COD)";
 
   let itemsText = "";
   cartItems.forEach((item, idx) => {
@@ -79,19 +79,19 @@ export function buildTelegramOrderMessage({
 📦 *ITEMS ORDERED*
 ${itemsText}
 💰 *PAYMENT & SUMMARY*
-• *Payment:* ${paymentTitle}
+• *Payment Method:* ${paymentTitle}
 • *Subtotal:* $${subtotalUsd.toFixed(2)}
 ${discountUsd > 0 ? `• *Discount Voucher:* -$${discountUsd.toFixed(2)}\n` : ""}• *Delivery Fee:* $${deliveryFeeUsd.toFixed(2)}
 ━━━━━━━━━━━━━━━━━━━━
 ✨ *TOTAL DUE:* *$${totalUsd.toFixed(2)} USD* (${totalKhr} ៛)
-⭐ *VIP Points Earned:* +${totalPoints} pt
-
-💬 *Store Contact:* @sompheareak
+⭐ *VIP Points Pending:* +${totalPoints} pt (credited upon order confirmation)
+${form.paymentMethod === "khqr" ? "\n💳 *Online Payment:* Transfer verified via ABA KHQR. Attached payment confirmation below.\n" : ""}
+💬 *Store Support:* @Somphea_reak
 🙏 Thank you for shopping with Somphea Reak Studio!`;
 
   return msg;
 }
 
-export function getTelegramShareUrl(message: string, username: string = "sompheareak"): string {
+export function getTelegramShareUrl(message: string, username: string = "Somphea_reak"): string {
   return `https://t.me/${username}?text=${encodeURIComponent(message)}`;
 }

@@ -131,6 +131,8 @@ export interface CustomerOrder {
   pointsEarned: number;
   voucherCodeApplied?: string | null;
   status: OrderStatus;
+  pointsAwarded?: boolean;
+  stockDeducted?: boolean;
   createdAt: string;
 }
 

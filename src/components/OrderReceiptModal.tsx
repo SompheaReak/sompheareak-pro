@@ -112,7 +112,7 @@ export const OrderReceiptModal: React.FC = () => {
     window.print();
   };
 
-  const telegramInquiryUrl = `https://t.me/sompheareak?text=${encodeURIComponent(
+  const telegramInquiryUrl = `https://t.me/Somphea_reak?text=${encodeURIComponent(
     `Hello Somphea Reak! I have an inquiry about my order #${order.orderRef} (${order.customerName}).`
   )}`;
 
@@ -280,7 +280,7 @@ export const OrderReceiptModal: React.FC = () => {
               Official Purchase Receipt & Tax Voucher
             </p>
             <p className="text-[10px] text-slate-400 mt-0.5">
-              Street 2004, Phnom Penh, Cambodia · Telegram: @sompheareak
+              Street 2004, Phnom Penh, Cambodia · Telegram: @Somphea_reak
             </p>
 
             {/* Reference & Status */}

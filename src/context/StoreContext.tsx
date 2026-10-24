@@ -502,7 +502,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           neonGetKey<CustomerOrder[]>("orders", []).then((loadedOrders) => {
             if (Array.isArray(loadedOrders)) {
-              setOrdersState(hydrateOrdersFromStorage(loadedOrders, CHARMS));
+              const hydrated = hydrateOrdersFromStorage(loadedOrders, CHARMS);
+              setOrdersState(hydrated);
+
+              // Auto-credit points to customer account if their placed orders were confirmed by store
+              if (typeof window !== "undefined") {
+                try {
+                  const myRefs: string[] = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
+                  const creditedRefs: string[] = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
+                  let pointsToAdd = 0;
+                  const newCredited = [...creditedRefs];
+
+                  hydrated.forEach((ord) => {
+                    const isMyOrder = myRefs.includes(ord.orderRef);
+                    const isConfirmed = ["confirmed", "packaging", "shipped", "delivered"].includes(ord.status);
+                    if (isMyOrder && isConfirmed && !creditedRefs.includes(ord.orderRef)) {
+                      pointsToAdd += ord.pointsEarned || 0;
+                      newCredited.push(ord.orderRef);
+                    }
+                  });
+
+                  if (pointsToAdd > 0) {
+                    setUserPoints((prev) => {
+                      const next = prev + pointsToAdd;
+                      safeSetItem("somphea_points", String(next));
+                      return next;
+                    });
+                    safeSetItem("somphea_credited_order_refs", JSON.stringify(newCredited));
+                    sounds.playFanfare();
+                  }
+                } catch {}
+              }
             }
           });
 
@@ -960,13 +990,113 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
     let orderRef = "SR-ORDER";
     setOrdersState((prev) => {
-      const updated = prev.map((o) => {
-        if (o.id === orderId) {
-          orderRef = o.orderRef;
-          return { ...o, status };
+      const targetOrder = prev.find((o) => o.id === orderId);
+      if (!targetOrder) return prev;
+
+      orderRef = targetOrder.orderRef;
+      const willConfirm = status === "confirmed" || status === "packaging" || status === "shipped" || status === "delivered";
+      const isReversal = status === "rejected" || status === "cancelled";
+
+      let nextStockDeducted = targetOrder.stockDeducted;
+      let nextPointsAwarded = targetOrder.pointsAwarded;
+
+      // 1. DEDUCT STOCK ONLY WHEN ORDER IS CONFIRMED
+      if (willConfirm && !targetOrder.stockDeducted) {
+        setProductsState((currentProds) => {
+          let changed = false;
+          const nextProds = currentProds.map((prod) => {
+            let totalQty = 0;
+            targetOrder.items.forEach((it) => {
+              if (it.product && it.product.id === prod.id) {
+                totalQty += it.quantity;
+              }
+            });
+            if (totalQty > 0) {
+              changed = true;
+              return {
+                ...prod,
+                stock: Math.max(0, (prod.stock || 0) - totalQty),
+              };
+            }
+            return prod;
+          });
+
+          if (changed) {
+            safeSetItem("somphea_products", JSON.stringify(nextProds));
+            neonSetKey("products", nextProds);
+          }
+          return nextProds;
+        });
+        nextStockDeducted = true;
+      } else if (isReversal && targetOrder.stockDeducted) {
+        // Restore stock if previously confirmed order was cancelled/rejected
+        setProductsState((currentProds) => {
+          let changed = false;
+          const nextProds = currentProds.map((prod) => {
+            let totalQty = 0;
+            targetOrder.items.forEach((it) => {
+              if (it.product && it.product.id === prod.id) {
+                totalQty += it.quantity;
+              }
+            });
+            if (totalQty > 0) {
+              changed = true;
+              return {
+                ...prod,
+                stock: (prod.stock || 0) + totalQty,
+              };
+            }
+            return prod;
+          });
+
+          if (changed) {
+            safeSetItem("somphea_products", JSON.stringify(nextProds));
+            neonSetKey("products", nextProds);
+          }
+          return nextProds;
+        });
+        nextStockDeducted = false;
+      }
+
+      // 2. AWARD VIP POINTS ONLY WHEN ORDER IS CONFIRMED
+      if (willConfirm && !targetOrder.pointsAwarded && (targetOrder.pointsEarned || 0) > 0) {
+        setUserPoints((curPts) => {
+          const nextPts = curPts + targetOrder.pointsEarned;
+          safeSetItem("somphea_points", String(nextPts));
+          return nextPts;
+        });
+        if (typeof window !== "undefined") {
+          try {
+            const credited = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
+            if (!credited.includes(targetOrder.orderRef)) {
+              localStorage.setItem("somphea_credited_order_refs", JSON.stringify([...credited, targetOrder.orderRef]));
+            }
+          } catch {}
         }
-        return o;
-      });
+        nextPointsAwarded = true;
+      } else if (isReversal && targetOrder.pointsAwarded && (targetOrder.pointsEarned || 0) > 0) {
+        setUserPoints((curPts) => {
+          const nextPts = Math.max(0, curPts - targetOrder.pointsEarned);
+          safeSetItem("somphea_points", String(nextPts));
+          return nextPts;
+        });
+        if (typeof window !== "undefined") {
+          try {
+            const credited = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
+            localStorage.setItem(
+              "somphea_credited_order_refs",
+              JSON.stringify(credited.filter((r: string) => r !== targetOrder.orderRef))
+            );
+          } catch {}
+        }
+        nextPointsAwarded = false;
+      }
+
+      const updated = prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status, stockDeducted: nextStockDeducted, pointsAwarded: nextPointsAwarded }
+          : o
+      );
       const compacted = compactOrdersForStorage(updated);
       safeSetItem("somphea_orders", JSON.stringify(compacted));
       neonSetKey("orders", compacted);
@@ -985,9 +1115,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           : `Order #${orderRef} Updated: ${status.toUpperCase()}`,
       message:
         status === "rejected"
-          ? `Order #${orderRef} was rejected. Please contact shop support via Telegram.`
+          ? `Order #${orderRef} was rejected. Please contact shop support via Telegram (@Somphea_reak).`
           : status === "confirmed"
-          ? `Order #${orderRef} for store delivery has been verified and confirmed!`
+          ? `Order #${orderRef} for store delivery has been verified and confirmed! Stock deducted & VIP points credited.`
           : `Warehouse tracking updated status to ${status.toUpperCase()} for order #${orderRef}.`,
       type:
         status === "delivered"
