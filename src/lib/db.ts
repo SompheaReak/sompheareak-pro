@@ -375,6 +375,41 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
 
   order.status = status;
 
+  if (status === "confirmed" && !order.stockDeducted) {
+    let stockChanged = false;
+    for (const item of order.items) {
+      const prodId = item.product?.id;
+      if (prodId) {
+        const prod = db.products.find((p) => p.id === prodId);
+        if (prod) {
+          prod.stock = Math.max(0, (prod.stock || 0) - item.quantity);
+          stockChanged = true;
+        }
+      }
+    }
+    order.stockDeducted = true;
+    order.pointsAwarded = true;
+    if (stockChanged) {
+      await saveNeonKey("products", db.products);
+    }
+  } else if ((status === "rejected" || status === "cancelled") && order.stockDeducted) {
+    let stockChanged = false;
+    for (const item of order.items) {
+      const prodId = item.product?.id;
+      if (prodId) {
+        const prod = db.products.find((p) => p.id === prodId);
+        if (prod) {
+          prod.stock = (prod.stock || 0) + item.quantity;
+          stockChanged = true;
+        }
+      }
+    }
+    order.stockDeducted = false;
+    if (stockChanged) {
+      await saveNeonKey("products", db.products);
+    }
+  }
+
   let notifTitle = `Order Status: #${order.orderRef}`;
   let notifMessage = `Order #${order.orderRef} status updated to ${status.toUpperCase()}.`;
   let notifType: OrderNotification["type"] = "system";
