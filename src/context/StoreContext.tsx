@@ -298,6 +298,40 @@ export const safeSetItem = (key: string, value: string): boolean => {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
+const ADMIN_API_BASE =
+  process.env.NEXT_PUBLIC_ADMIN_URL || "https://sompheareak-admin.onrender.com";
+
+// Resilient API fetcher: tries local API route first, then falls back to Admin API web service
+async function apiFetch(endpoint: string, options?: RequestInit) {
+  try {
+    const res = await fetch(endpoint, {
+      ...options,
+      cache: "no-store",
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (res.ok && contentType.includes("application/json")) {
+      return await res.json();
+    }
+  } catch (err) {}
+
+  if (ADMIN_API_BASE) {
+    try {
+      const fallbackUrl = `${ADMIN_API_BASE.replace(/\/$/, "")}${endpoint}`;
+      const res = await fetch(fallbackUrl, {
+        ...options,
+        cache: "no-store",
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn("Fallback to admin API failed:", err);
+    }
+  }
+
+  return null;
+}
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currency, setCurrencyState] = useState<Currency>("USD");
   const [language, setLanguageState] = useState<Language>("en");
@@ -406,15 +440,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           } catch {}
         }
 
-        // Fetch fresh database state from Testing Server API
-        fetch("/api/products")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.data)) {
-              setProductsState(d.data);
-            }
-          })
-          .catch(() => {});
+        // Fetch fresh database state from Testing Server API or fallback to Admin API
+        apiFetch("/api/products").then((d) => {
+          if (d && d.success && Array.isArray(d.data)) {
+            setProductsState(d.data);
+            safeSetItem("somphea_products", JSON.stringify(d.data));
+          }
+        });
 
         // Fetch Italy Modular Charms with guaranteed unique codes
         const savedCharms = localStorage.getItem("somphea_charms");
@@ -428,16 +460,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           } catch {}
         }
-        fetch("/api/charms")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.data) && d.data.length > 0) {
-              const unique = ensureUniqueCharmCodes(d.data);
-              setCharmsState(unique);
-              safeSetItem("somphea_charms", JSON.stringify(unique));
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/charms").then((d) => {
+          if (d && d.success && Array.isArray(d.data) && d.data.length > 0) {
+            const unique = ensureUniqueCharmCodes(d.data);
+            setCharmsState(unique);
+            safeSetItem("somphea_charms", JSON.stringify(unique));
+          }
+        });
 
         // Orders Hydration
         const savedOrders = localStorage.getItem("somphea_orders");
@@ -448,41 +477,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           } catch {}
         }
 
-        fetch("/api/orders")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.data)) {
-              setOrdersState(hydrateOrdersFromStorage(d.data, CHARMS));
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/orders").then((d) => {
+          if (d && d.success && Array.isArray(d.data)) {
+            setOrdersState(hydrateOrdersFromStorage(d.data, CHARMS));
+          }
+        });
 
-        fetch("/api/vouchers")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.data)) {
-              setVouchersState(d.data);
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/vouchers").then((d) => {
+          if (d && d.success && Array.isArray(d.data)) {
+            setVouchersState(d.data);
+          }
+        });
 
-        fetch("/api/notifications")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.data)) {
-              setNotifications(d.data);
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/notifications").then((d) => {
+          if (d && d.success && Array.isArray(d.data)) {
+            setNotifications(d.data);
+          }
+        });
 
-        fetch("/api/store-config")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && d.data) {
-              setStorefrontConfig(d.data);
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/store-config").then((d) => {
+          if (d && d.success && d.data) {
+            setStorefrontConfig(d.data);
+          }
+        });
 
         const savedBoxes = localStorage.getItem("somphea_category_boxes");
         if (savedBoxes) {
@@ -492,15 +509,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           } catch {}
         }
 
-        fetch("/api/category-boxes")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.categoryBoxes)) {
-              setCategoryBoxesState(d.categoryBoxes);
-              safeSetItem("somphea_category_boxes", JSON.stringify(d.categoryBoxes));
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/category-boxes").then((d) => {
+          if (d && d.success && Array.isArray(d.categoryBoxes)) {
+            setCategoryBoxesState(d.categoryBoxes);
+            safeSetItem("somphea_category_boxes", JSON.stringify(d.categoryBoxes));
+          }
+        });
 
         const savedCategories = localStorage.getItem("somphea_categories");
         if (savedCategories) {
@@ -510,15 +524,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           } catch {}
         }
 
-        fetch("/api/categories")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.success && Array.isArray(d.categories) && d.categories.length > 0) {
-              setCategoriesState(d.categories);
-              safeSetItem("somphea_categories", JSON.stringify(d.categories));
-            }
-          })
-          .catch(() => {});
+        apiFetch("/api/categories").then((d) => {
+          if (d && d.success && Array.isArray(d.categories) && d.categories.length > 0) {
+            setCategoriesState(d.categories);
+            safeSetItem("somphea_categories", JSON.stringify(d.categories));
+          }
+        });
       }
     } catch {
       // ignore SSR or storage exceptions
@@ -925,8 +936,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [notif, ...prev]);
     setLatestNotificationToast(notif);
 
-    // Sync to testing server DB
-    fetch("/api/orders", {
+    // Sync to backend DB
+    apiFetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(order),

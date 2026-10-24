@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getProducts, addProduct, resetProducts, wipeAllProducts } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const products = await getProducts();
@@ -32,6 +35,7 @@ export async function POST(request: Request) {
     }
 
     const created = await addProduct({
+      code: body.code,
       name: body.name,
       nameKh: body.nameKh || body.name,
       cat: body.cat || "minifigure",
