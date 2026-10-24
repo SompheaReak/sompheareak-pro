@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin-panel/layout,_N_T_/admin-panel/page,_N_T_/admin-panel"
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/4c9228192046339bc90960dbac5abab9f2412cd53664e3441b55ff80becc11d0/$/admin-panel",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/admin-panel/page"
+    },
+    "isFallback": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/bracelet/layout,_N_T_/bracelet/page,_N_T_/bracelet"
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/668ced2012213fa0213814193fd7248e665054da0bf313daa47cb8e0fd1117b2/$/bracelet",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/bracelet/page"
+    },
+    "isFallback": false
+  }
+}

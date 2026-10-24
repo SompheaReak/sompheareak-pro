@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/italy-bracelet/layout,_N_T_/italy-bracelet/page,_N_T_/italy-bracelet"
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/dd15e14afa4809c1ffa8e44427e57fc6584dc6e4837feaf13cdb804c5e4f71ca/$/italy-bracelet",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/italy-bracelet/page"
+    },
+    "isFallback": false
+  }
+}
