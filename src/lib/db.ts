@@ -48,7 +48,7 @@ const INITIAL_NOTIFICATIONS: OrderNotification[] = [];
 // NEON POSTGRESQL DRIVER INTEGRATION
 // ==========================================
 const NEON_DEFAULT_URL =
-  "postgresql://neondb_owner:npg_Pr8eQM1XAKJc@ep-blue-resonance-azj4thpc-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+  "postgresql://neondb_owner:npg_PMLFK18CHxin@ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 function getDatabaseUrl(): string {
   return (
