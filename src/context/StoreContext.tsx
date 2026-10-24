@@ -489,6 +489,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               setOrdersState(hydrateOrdersFromStorage(loadedOrders, CHARMS));
             }
           });
+
+          neonGetKey<OrderNotification[]>("notifications", []).then((loadedNotifs) => {
+            if (Array.isArray(loadedNotifs)) {
+              setNotifications(loadedNotifs);
+            }
+          });
         };
 
         // Initial sync from Neon DB
@@ -749,8 +755,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const product: Product = { ...newProd, id };
 
     setProductsState((prev) => {
-      const updated = [product, ...prev];
+      const filtered = prev.filter((p) => p.id !== id && (!p.code || p.code !== product.code));
+      const updated = [product, ...filtered];
       safeSetItem("somphea_products", JSON.stringify(updated));
+      neonSetKey("products", updated);
       return updated;
     });
 
@@ -768,6 +776,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProductsState((prev) => {
       const updated = prev.map((p) => (p.id === id ? { ...p, ...updates } : p));
       safeSetItem("somphea_products", JSON.stringify(updated));
+      neonSetKey("products", updated);
       return updated;
     });
 
@@ -783,6 +792,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProductsState((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       safeSetItem("somphea_products", JSON.stringify(updated));
+      neonSetKey("products", updated);
       return updated;
     });
 
@@ -820,6 +830,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCharmsState((prev) => {
       const updated = ensureUniqueCharmCodes([charm, ...prev]);
       safeSetItem("somphea_charms", JSON.stringify(updated));
+      neonSetKey("charms", updated);
       return updated;
     });
 
@@ -845,6 +856,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
       const guaranteed = ensureUniqueCharmCodes(updated);
       safeSetItem("somphea_charms", JSON.stringify(guaranteed));
+      neonSetKey("charms", guaranteed);
       return guaranteed;
     });
 
@@ -859,6 +871,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCharmsState((prev) => {
       const updated = prev.filter((c) => c.id !== id);
       safeSetItem("somphea_charms", JSON.stringify(updated));
+      neonSetKey("charms", updated);
       return updated;
     });
 

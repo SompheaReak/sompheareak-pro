@@ -10,5 +10,7 @@ services:
         value: 20
       - key: DATABASE_URL
         value: postgresql://neondb_owner:npg_PMLFK18CHxin@ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: NEXT_PUBLIC_DATABASE_URL
+        value: postgresql://neondb_owner:npg_PMLFK18CHxin@ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: NEXT_PUBLIC_ADMIN_URL
         value: https://sompheareak-admin.onrender.com

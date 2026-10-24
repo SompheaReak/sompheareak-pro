@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     }
 
     const created = await addProduct({
+      id: body.id,
       code: body.code,
       name: body.name,
       nameKh: body.nameKh || body.name,

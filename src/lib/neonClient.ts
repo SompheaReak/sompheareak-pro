@@ -4,22 +4,34 @@
  * Works in static CDN browsers, edge runtimes, and Node.js servers alike!
  */
 
-const NEON_URL =
-  process.env.NEXT_PUBLIC_DATABASE_URL ||
-  process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_PMLFK18CHxin@ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-
-const NEON_HOST = "ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech";
-const NEON_ENDPOINT = `https://${NEON_HOST}/sql`;
+function getNeonConfig(): { url: string; endpoint: string } {
+  const url =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_DATABASE_URL) ||
+    (typeof process !== "undefined" && process.env?.DATABASE_URL) ||
+    "postgresql://neondb_owner:npg_PMLFK18CHxin@ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  try {
+    const parsed = new URL(url);
+    return {
+      url,
+      endpoint: `https://${parsed.hostname}/sql`,
+    };
+  } catch {
+    return {
+      url,
+      endpoint: "https://ep-autumn-grass-ao3z40da-pooler.c-2.ap-southeast-1.aws.neon.tech/sql",
+    };
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function neonQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
   try {
-    const res = await fetch(NEON_ENDPOINT, {
+    const { url, endpoint } = getNeonConfig();
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Neon-Connection-String": NEON_URL,
+        "Neon-Connection-String": url,
       },
       body: JSON.stringify({ query, params }),
       cache: "no-store",

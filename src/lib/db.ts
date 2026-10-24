@@ -281,12 +281,17 @@ export function generateProductCode(): string {
   return `SPK-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-export async function addProduct(newProduct: Omit<Product, "id">): Promise<Product> {
+export async function addProduct(newProduct: Omit<Product, "id"> & { id?: string }): Promise<Product> {
   const db = await getDbAsync();
-  const id = `toy-${Date.now()}`;
+  const id = newProduct.id || `toy-${Date.now()}`;
   const code = newProduct.code || generateProductCode();
   const product: Product = { ...newProduct, id, code };
-  db.products.unshift(product);
+  const existingIdx = db.products.findIndex((p) => p.id === id || (p.code && p.code === code));
+  if (existingIdx !== -1) {
+    db.products[existingIdx] = product;
+  } else {
+    db.products.unshift(product);
+  }
   saveDb(db);
   await saveNeonKey("products", db.products);
   return product;
@@ -505,12 +510,17 @@ export async function getCharmById(id: string): Promise<Charm | undefined> {
   return charms.find((c) => c.id === id);
 }
 
-export async function addCharm(newCharm: Omit<Charm, "id">): Promise<Charm> {
+export async function addCharm(newCharm: Omit<Charm, "id"> & { id?: string }): Promise<Charm> {
   const db = await getDbAsync();
-  const id = `charm-${Date.now()}`;
+  const id = newCharm.id || `charm-${Date.now()}`;
   const code = generateUniqueCharmCode(newCharm, db.charms);
   const charm: Charm = { ...newCharm, id, code };
-  db.charms.unshift(charm);
+  const existingIdx = db.charms.findIndex((c) => c.id === id);
+  if (existingIdx !== -1) {
+    db.charms[existingIdx] = charm;
+  } else {
+    db.charms.unshift(charm);
+  }
   db.charms = ensureUniqueCharmCodes(db.charms);
   saveDb(db);
   await saveNeonKey("charms", db.charms);

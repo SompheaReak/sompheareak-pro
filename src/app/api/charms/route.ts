@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     }
 
     const created = await addCharm({
+      id: body.id,
       code: body.code,
       name: body.name,
       nameKh: body.nameKh || body.name,
