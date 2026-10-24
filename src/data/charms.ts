@@ -253,5 +253,5 @@ export const DEFAULT_STUDIO_CHARMS: Charm[] = [
   { id: "quart-7", code: "Q08", name: "Moonlight Gem", nameKh: "ត្បូងពន្លឺព្រះចន្ទ", category: "gems", price: 0.73, image: "/assets/charms_tight/quart_7.webp" },
 ];
 
-export const CHARMS: Charm[] = DEFAULT_STUDIO_CHARMS;
+export const CHARMS: Charm[] = [];
 

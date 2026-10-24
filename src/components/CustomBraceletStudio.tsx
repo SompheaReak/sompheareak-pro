@@ -320,19 +320,13 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
   };
 
   const allDisplayCharms = useMemo(() => {
-    const customList = charms && charms.length > 0 ? charms : [];
-    if (customList.length > 0) {
-      const baseLinks = DEFAULT_STUDIO_CHARMS.slice(0, 8);
-      const customWithoutBase = customList.filter((c) => !c.id.startsWith("base-"));
-      return [...baseLinks, ...customWithoutBase];
-    }
-    return DEFAULT_STUDIO_CHARMS;
+    return charms && charms.length > 0 ? charms : [];
   }, [charms]);
 
   // Randomize with surprise mix of charms (auto-fills to minimum 16 charms)
   const handleRandomize = () => {
     sounds.playFanfare();
-    const available = allDisplayCharms.length > 0 ? allDisplayCharms : DEFAULT_STUDIO_CHARMS;
+    const available = allDisplayCharms;
     if (available.length === 0) return;
 
     const count = 16;
@@ -607,53 +601,67 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
           )}
         </div>
 
-        {/* 8-col desktop / 4-col mobile grid */}
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3">
-          {allDisplayCharms.map((charm) => (
-            <div
-              key={charm.id}
-              onClick={() => handleAddCharm(charm)}
-              className="group relative rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 hover:border-emerald-500 dark:hover:border-emerald-400 p-2 sm:p-2.5 flex flex-col items-center justify-between cursor-pointer active:scale-95 transition-all shadow-xs hover:shadow-md select-none"
-              title={`${language === "km" ? charm.nameKh : charm.name} - ${formatPrice(charm.price || 0.73, currency)}`}
-            >
-              {/* Admin Delete Charm Button */}
-              {isAdminMode && !charm.id.startsWith("base-") && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Delete charm "${charm.name}"?`)) {
-                      sounds.playPop();
-                      deleteCharm(charm.id);
-                      setSlots((prev) => prev.filter((c) => c.id !== charm.id));
-                    }
-                  }}
-                  className="absolute top-1 left-1 z-20 p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-xs"
-                  title={`Delete ${charm.name}`}
-                >
-                  <Trash2 className="w-2.5 h-2.5" />
-                </button>
-              )}
+        {/* 8-col desktop / 4-col mobile grid or empty state */}
+        {allDisplayCharms.length === 0 ? (
+          <div className="py-12 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-6 space-y-2">
+            <span className="text-3xl block">✨</span>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              {language === "km" ? "មិនទាន់មានត្បូងនៅក្នុងស្តុកនៅឡើយទេ" : "No charms in inventory yet"}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+              {isAdminMode
+                ? "Click 'Upload Charm' above to add your first authentic charm link to the catalog."
+                : (language === "km" ? "សូមរង់ចាំការទម្លាក់ត្បូងថ្មីៗក្នុងពេលឆាប់ៗនេះ!" : "New charm drops coming soon! Stay tuned.")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3">
+            {allDisplayCharms.map((charm) => (
+              <div
+                key={charm.id}
+                onClick={() => handleAddCharm(charm)}
+                className="group relative rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 hover:border-emerald-500 dark:hover:border-emerald-400 p-2 sm:p-2.5 flex flex-col items-center justify-between cursor-pointer active:scale-95 transition-all shadow-xs hover:shadow-md select-none"
+                title={`${language === "km" ? charm.nameKh : charm.name} - ${formatPrice(charm.price || 0.73, currency)}`}
+              >
+                {/* Admin Delete Charm Button */}
+                {isAdminMode && !charm.id.startsWith("base-") && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete charm "${charm.name}"?`)) {
+                        sounds.playPop();
+                        deleteCharm(charm.id);
+                        setSlots((prev) => prev.filter((c) => c.id !== charm.id));
+                      }
+                    }}
+                    className="absolute top-1 left-1 z-20 p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-xs"
+                    title={`Delete ${charm.name}`}
+                  >
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
+                )}
 
-              <div className="relative w-12 h-12 sm:w-16 sm:h-16 my-1 flex items-center justify-center">
-                <Image
-                  src={charm.image || "/assets/charm_clean.png"}
-                  alt={charm.name}
-                  fill
-                  className="object-contain group-hover:scale-105 transition-transform duration-150 filter drop-shadow-xs"
-                  unoptimized={Boolean(charm.image?.startsWith("data:"))}
-                  sizes="(max-width: 640px) 25vw, 120px"
-                />
-              </div>
+                <div className="relative w-12 h-12 sm:w-16 sm:h-16 my-1 flex items-center justify-center">
+                  <Image
+                    src={charm.image || "/assets/charm_clean.png"}
+                    alt={charm.name}
+                    fill
+                    className="object-contain group-hover:scale-105 transition-transform duration-150 filter drop-shadow-xs"
+                    unoptimized={Boolean(charm.image?.startsWith("data:"))}
+                    sizes="(max-width: 640px) 25vw, 120px"
+                  />
+                </div>
 
-              <div className="w-full text-center mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
-                <span className="block font-black font-fredoka text-xs text-emerald-600 dark:text-emerald-400">
-                  {formatPrice(charm.price || 0.73, currency)}
-                </span>
+                <div className="w-full text-center mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+                  <span className="block font-black font-fredoka text-xs text-emerald-600 dark:text-emerald-400">
+                    {formatPrice(charm.price || 0.73, currency)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ==================================================== */}
