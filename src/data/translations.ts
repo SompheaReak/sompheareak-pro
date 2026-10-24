@@ -98,7 +98,7 @@ export const TRANSLATIONS = {
     howEarnTitle: "How to Earn Points",
     earnRule1: "+3 to +8 Points for every Minifigure & RC Toy",
     earnRule2: "+6 to +15 Points for Custom Italy Charm Bracelets",
-    earnRule3: "+10 Welcome Points automatically for every new customer",
+    earnRule3: "Earn VIP points automatically with every confirmed order",
     pointsExchangeNotice: "Points are deducted when exchanged for a voucher. Vouchers are applied automatically to your cart!",
 
     // Cart Page
@@ -214,7 +214,7 @@ export const TRANSLATIONS = {
     howEarnTitle: "វិធីសន្សំពិន្ទុ",
     earnRule1: "+3 ទៅ +8 ពិន្ទុសម្រាប់តុក្កតាមីនី & ឡានបញ្ជា",
     earnRule2: "+6 ទៅ +15 ពិន្ទុសម្រាប់ខ្សែដៃម៉ូឌុលអ៊ីតាលី",
-    earnRule3: "+10 ពិន្ទុស្វាគមន៍ដោយស្វ័យប្រវត្តិសម្រាប់អតិថិជនថ្មី",
+    earnRule3: "ទទួលបានពិន្ទុ VIP ដោយស្វ័យប្រវត្តិជាមួយរាល់ការបញ្ជាក់ការកុម្ម៉ង់",
     pointsExchangeNotice: "ពិន្ទុនឹងត្រូវកាត់ពេលប្តូរយកប័ណ្ណ។ ប័ណ្ណបញ្ចុះតម្លៃនឹងត្រូវភ្ជាប់ជាមួយកន្ត្រកទំនិញដោយស្វ័យប្រវត្តិ!",
 
     // Cart Page

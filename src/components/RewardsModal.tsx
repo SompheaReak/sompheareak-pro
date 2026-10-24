@@ -129,7 +129,7 @@ export const RewardsModal: React.FC = () => {
               </li>
               <li className="flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-amber-500 dark:text-toy-yellow flex-shrink-0" />
-                <span>+10 Welcome Points automatically for all new visitors!</span>
+                <span>Earn VIP points automatically with every confirmed order!</span>
               </li>
             </ul>
           </div>

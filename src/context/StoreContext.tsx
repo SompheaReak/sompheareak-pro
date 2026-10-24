@@ -373,7 +373,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
 
-  const [userPoints, setUserPoints] = useState(25);
+  const [userPoints, setUserPoints] = useState(0);
   const [activeVoucher, setActiveVoucher] = useState<Voucher | null>(null);
   const [claimedVouchers, setClaimedVouchers] = useState<string[]>([]);
 
@@ -433,8 +433,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       const savedPts = localStorage.getItem("somphea_points");
-      if (savedPts) {
-        setUserPoints(parseInt(savedPts, 10));
+      const hasInitV2 = localStorage.getItem("somphea_points_v2");
+      if (!hasInitV2) {
+        // Ensure new and uncredited visitors start cleanly at 0 points instead of legacy 25
+        const creditedRefs: string[] = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
+        if (creditedRefs.length === 0) {
+          setUserPoints(0);
+          safeSetItem("somphea_points", "0");
+        } else if (savedPts !== null) {
+          setUserPoints(parseInt(savedPts, 10) || 0);
+        }
+        safeSetItem("somphea_points_v2", "true");
+      } else if (savedPts !== null) {
+        setUserPoints(parseInt(savedPts, 10) || 0);
       }
 
       // Check admin status & query param

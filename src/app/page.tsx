@@ -172,7 +172,7 @@ export default function HomePage() {
               Earn Rewards & Free Vouchers on Every Drop!
             </h3>
             <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 max-w-md font-medium">
-              Collect 25 points to redeem an instant 10% OFF voucher. Get +10 Welcome Points immediately on your first visit!
+              Collect 25 points to redeem an instant 10% OFF voucher. Earn points on every confirmed order!
             </p>
           </div>
 
