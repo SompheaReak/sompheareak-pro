@@ -27,10 +27,12 @@ function getNeonConfig(): { url: string; endpoint: string } {
 export async function neonQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
   try {
     const { url, endpoint } = getNeonConfig();
+    // Do NOT send 'Content-Type: application/json' here.
+    // Neon's HTTP CORS preflight response allows 'Neon-Connection-String' but omits 'Content-Type'.
+    // Leaving out Content-Type avoids browser CORS preflight blocking while Neon's gateway parses JSON body correctly.
     const res = await fetch(endpoint, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "Neon-Connection-String": url,
       },
       body: JSON.stringify({ query, params }),
@@ -71,12 +73,14 @@ export async function neonSetKey<T>(key: string, value: T): Promise<boolean> {
       `INSERT INTO sompheareak_store (key, value, updated_at)
        VALUES ($1, $2::jsonb, NOW())
        ON CONFLICT (key) DO UPDATE
-       SET value = EXCLUDED.value, updated_at = NOW();`,
+       SET value = EXCLUDED.value, updated_at = NOW()
+       RETURNING key;`,
       [key, JSON.stringify(value)]
     );
-    return Array.isArray(result);
+    return Array.isArray(result) && result.length > 0;
   } catch (err) {
     console.error(`Failed to write key '${key}' to Neon:`, err);
     return false;
   }
 }
+
