@@ -10,7 +10,6 @@ export const CategoryArcade: React.FC = () => {
 
   const getCategoryCount = (catId: string) => {
     if (catId === "all") return products.length;
-    if (catId === "bracelet") return "Studio 🔗";
     if (catId === "toy") {
       return products.filter(
         (p) =>
@@ -50,11 +49,6 @@ export const CategoryArcade: React.FC = () => {
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                if (cat.id === "bracelet") {
-                  sounds.playFanfare();
-                  window.location.href = "/italy-bracelet";
-                  return;
-                }
                 sounds.playPop();
                 setSelectedCategory(cat.id);
               }}

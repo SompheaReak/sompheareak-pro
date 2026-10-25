@@ -74,19 +74,6 @@
       "active": true
     },
     {
-      "id": "box-bracelet-unisex",
-      "title": "Braclet for Male&Female",
-      "titleKh": "ខ្សែដៃបុរស & នារី Braclet for Male&Female",
-      "subtitle": "Premium 316L Stainless Steel · Unisex Collection",
-      "image": "/assets/categories/bracelet-unisex.jpg",
-      "actionType": "link",
-      "actionValue": "/italy-bracelet",
-      "span": "full",
-      "badge": "UNISEX 🖤",
-      "order": 2,
-      "active": true
-    },
-    {
       "id": "box-minifigure",
       "title": "MINIFIGURE",
       "titleKh": "តុក្កតាមីនី Minifigure",
@@ -96,7 +83,7 @@
       "actionValue": "minifigure",
       "span": "half",
       "badge": "VIRAL 🔥",
-      "order": 3,
+      "order": 2,
       "active": true
     },
     {
@@ -109,6 +96,19 @@
       "actionValue": "toy",
       "span": "half",
       "badge": "TRENDING ⚡",
+      "order": 3,
+      "active": true
+    },
+    {
+      "id": "box-bracelet-unisex",
+      "title": "Braclet for Male&Female",
+      "titleKh": "ខ្សែដៃបុរស & នារី Braclet for Male&Female",
+      "subtitle": "Premium 316L Stainless Steel · Unisex Collection",
+      "image": "/assets/categories/bracelet-unisex.jpg",
+      "actionType": "category",
+      "actionValue": "bracelet",
+      "span": "full",
+      "badge": "UNISEX 🖤",
       "order": 4,
       "active": true
     }

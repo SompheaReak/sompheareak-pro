@@ -509,6 +509,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   finalCats.push(toyCat);
                 }
               }
+              const braceletCat = finalCats.find((c) => c.id === "bracelet");
+              if (braceletCat) {
+                braceletCat.name = "Braclet for Male&Female";
+                braceletCat.kh = "ខ្សែដៃបុរស & នារី Braclet for Male&Female";
+                braceletCat.en = "Braclet for Male&Female";
+              }
               setCategoriesState(finalCats);
               safeSetItem("somphea_categories", JSON.stringify(finalCats));
             }
@@ -518,12 +524,47 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (Array.isArray(boxes) && boxes.length > 0) {
               const existingIds = new Set(boxes.map((b) => b.id));
               const missingDefaults = DEFAULT_CATEGORY_BOXES.filter((b) => !existingIds.has(b.id));
-              const combined = missingDefaults.length > 0 ? [...boxes, ...missingDefaults] : boxes;
-              setCategoryBoxesState(combined);
-              safeSetItem("somphea_category_boxes", JSON.stringify(combined));
-              if (missingDefaults.length > 0) {
-                neonSetKey("categoryBoxes", combined);
-              }
+              const combined = missingDefaults.length > 0 ? [...boxes, ...missingDefaults] : [...boxes];
+              // Normalize category boxes: Toy next to Minifigure, Bracelet for Male&Female points to category
+              const normalized = combined.map((b) => {
+                if (b.id === "box-bracelet-unisex") {
+                  return {
+                    ...b,
+                    actionType: "category" as const,
+                    actionValue: "bracelet",
+                    order: 4,
+                    span: "full" as const,
+                  };
+                }
+                if (b.id === "box-toy") {
+                  return {
+                    ...b,
+                    actionType: "category" as const,
+                    actionValue: "toy",
+                    order: 3,
+                    span: "half" as const,
+                  };
+                }
+                if (b.id === "box-minifigure") {
+                  return {
+                    ...b,
+                    order: 2,
+                    span: "half" as const,
+                  };
+                }
+                if (b.id === "box-italy-bracelet") {
+                  return {
+                    ...b,
+                    order: 1,
+                    span: "full" as const,
+                  };
+                }
+                return b;
+              }).sort((a, b) => a.order - b.order);
+
+              setCategoryBoxesState(normalized);
+              safeSetItem("somphea_category_boxes", JSON.stringify(normalized));
+              neonSetKey("categoryBoxes", normalized);
             } else {
               setCategoryBoxesState(DEFAULT_CATEGORY_BOXES);
               safeSetItem("somphea_category_boxes", JSON.stringify(DEFAULT_CATEGORY_BOXES));

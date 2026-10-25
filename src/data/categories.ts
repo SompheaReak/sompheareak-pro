@@ -33,12 +33,12 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "bracelet",
-    name: "Italy Modular Charm",
-    kh: "ខ្សែដៃម៉ូឌុលអ៊ីតាលី Italy Charm",
-    en: "Italy Modular Charm",
+    name: "Braclet for Male&Female",
+    kh: "ខ្សែដៃបុរស & នារី Braclet for Male&Female",
+    en: "Braclet for Male&Female",
     icon: "📿",
     grad: "from-emerald-400 to-teal-600",
     sort_order: 3,
-    description: "Craft your unique custom bracelet with stainless steel Italian charm links.",
+    description: "Premium stainless steel fashion & couple bracelets for men and women.",
   },
 ];
