@@ -12,7 +12,7 @@ interface ConnectedCharmLinkProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onRemove?: () => void;
-  size?: "workbench" | "preview" | "compact";
+  size?: "workbench" | "preview" | "compact" | "fill";
   engravedText?: string | null;
 }
 
@@ -48,6 +48,10 @@ export const ConnectedCharmLink: React.FC<ConnectedCharmLinkProps> = ({
       w: "w-[36px] sm:w-[42px]",
       fontSize: "text-[7px]",
     },
+    fill: {
+      w: "w-full",
+      fontSize: "text-[7px] sm:text-[8px]",
+    },
   };
 
   const currentSize = sizeMap[size];
@@ -63,7 +67,7 @@ export const ConnectedCharmLink: React.FC<ConnectedCharmLinkProps> = ({
       whileHover={{ y: -3, scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
       onClick={onSelect}
-      className={`group relative ${currentSize.w} aspect-[1.14/1] flex-shrink-0 cursor-pointer select-none transition-all duration-150 ${
+      className={`group relative ${currentSize.w} aspect-[1.14/1] ${size === "fill" ? "min-w-0" : "flex-shrink-0"} cursor-pointer select-none transition-all duration-150 ${
         isSelected ? "z-30 scale-105" : "z-10"
       }`}
       title={

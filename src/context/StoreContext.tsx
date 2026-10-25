@@ -486,8 +486,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           neonGetKey<Category[]>("categories", CATEGORIES).then((cats) => {
             if (Array.isArray(cats) && cats.length > 0) {
-              setCategoriesState(cats);
-              safeSetItem("somphea_categories", JSON.stringify(cats));
+              const cleaned = cats.filter(
+                (c) => c.id !== "blind-box" && c.id !== "plushies" && c.id !== "tech-toys" && c.id !== "toy-universe"
+              );
+              const hasToy = cleaned.some((c) => c.id === "toy");
+              const finalCats = [...cleaned];
+              if (!hasToy) {
+                const minifigIdx = finalCats.findIndex((c) => c.id === "minifigure");
+                const toyCat = CATEGORIES.find((c) => c.id === "toy") || {
+                  id: "toy",
+                  name: "Toy",
+                  kh: "ប្រដាប់ក្មេងលេង Toy",
+                  en: "Toy",
+                  icon: "🪀",
+                  grad: "from-amber-400 to-orange-600",
+                  sort_order: 2,
+                  description: "Exciting toys, speed racers, collectible figures, and play sets.",
+                };
+                if (minifigIdx !== -1) {
+                  finalCats.splice(minifigIdx + 1, 0, toyCat);
+                } else {
+                  finalCats.push(toyCat);
+                }
+              }
+              setCategoriesState(finalCats);
+              safeSetItem("somphea_categories", JSON.stringify(finalCats));
             }
           });
 

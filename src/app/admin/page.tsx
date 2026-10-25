@@ -981,7 +981,14 @@ export default function AdminPage() {
       (p.nameKh && p.nameKh.toLowerCase().includes(q)) ||
       p.id.toLowerCase().includes(q) ||
       (p.code && p.code.toLowerCase().includes(q));
-    const matchesCat = productCatFilter === "all" || p.cat === productCatFilter;
+    const matchesCat =
+      productCatFilter === "all" ||
+      p.cat === productCatFilter ||
+      (productCatFilter === "toy" &&
+        (p.cat === "toy-universe" ||
+          p.cat === "tech-toys" ||
+          p.cat === "blind-box" ||
+          p.cat === "plushies"));
     return matchesSearch && matchesCat;
   });
 
@@ -1579,68 +1586,68 @@ export default function AdminPage() {
       {/* Dashboard Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-8">
         {/* Quick Analytics Metrics Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {/* Revenue */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-              <DollarSign className="w-6 h-6" />
+          <div className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-2.5 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <DollarSign className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight">Total Volume</span>
-              <span className="text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight truncate">Total Volume</span>
+              <span className="text-lg sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white truncate block">
                 {formatPrice(totalRevenueUsd, currency)}
               </span>
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">
                 ≈ {Math.round(totalRevenueUsd * 4100).toLocaleString()} KHR
               </span>
             </div>
           </div>
 
           {/* Orders */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
-              <ShoppingBag className="w-6 h-6" />
+          <div className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-2.5 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-teal-100 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight">Total Orders</span>
-              <span className="text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight truncate">Total Orders</span>
+              <span className="text-lg sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white truncate block">
                 {orders.length}
               </span>
               {pendingOrdersCount > 0 ? (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">
-                  {pendingOrdersCount} pending fulfillment!
+                <span className="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 font-bold block truncate">
+                  {pendingOrdersCount} pending!
                 </span>
               ) : (
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block">All caught up</span>
+                <span className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 block truncate">All caught up</span>
               )}
             </div>
           </div>
 
           {/* Products */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-              <Package className="w-6 h-6" />
+          <div className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-2.5 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+              <Package className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight">Active Catalog</span>
-              <span className="text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight truncate">Active Catalog</span>
+              <span className="text-lg sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white truncate block">
                 {products.length}
               </span>
-              <span className="text-[10px] text-slate-400 block">{inStockProductsCount} items in stock</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">{inStockProductsCount} in stock</span>
             </div>
           </div>
 
           {/* Points */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6" />
+          <div className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-2.5 sm:gap-4">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight">Loyalty Points</span>
-              <span className="text-2xl font-black font-fredoka text-amber-600 dark:text-amber-400">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 block leading-tight truncate">Loyalty Points</span>
+              <span className="text-lg sm:text-2xl font-black font-fredoka text-amber-600 dark:text-amber-400 truncate block">
                 {totalPointsCirculation} pt
               </span>
-              <span className="text-[10px] text-slate-400 block">Issued on customer orders</span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">Issued on orders</span>
             </div>
           </div>
         </div>
@@ -1676,16 +1683,16 @@ export default function AdminPage() {
             </div>
 
             {/* Low Stock Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               {lowStockProducts.map((prod) => {
                 const isOutOfStock = prod.stock <= 0;
                 return (
                   <div
                     key={`low-stock-${prod.id}`}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800/80 shadow-xs flex flex-col justify-between gap-3 hover:border-rose-500 transition-all"
+                    className="p-2.5 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800/80 shadow-xs flex flex-col justify-between gap-2 sm:gap-3 hover:border-rose-500 transition-all"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex-shrink-0">
                         <Image
                           src={prod.image || "/assets/logo.jpg"}
                           alt={prod.name}
@@ -1694,27 +1701,27 @@ export default function AdminPage() {
                           unoptimized={Boolean(prod.image?.startsWith("data:"))}
                         />
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 w-full">
                         <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate font-fredoka">
                           {prod.name}
                         </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
+                        <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 text-[9px] sm:text-[10px]">
                           {prod.code && (
-                            <span className="font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 rounded">
+                            <span className="font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 rounded truncate">
                               {prod.code}
                             </span>
                           )}
-                          <span className="text-slate-400 capitalize">{prod.cat}</span>
+                          <span className="text-slate-400 capitalize truncate">{prod.cat}</span>
                         </div>
                         <div className="mt-1">
                           <span
-                            className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full ${
+                            className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full ${
                               isOutOfStock
                                 ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800 animate-pulse"
                                 : "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
                             }`}
                           >
-                            <span>{isOutOfStock ? "❌ Out of Stock (0)" : `⚠️ Only ${prod.stock} left in stock!`}</span>
+                            <span>{isOutOfStock ? "❌ Out of Stock" : `⚠️ ${prod.stock} left`}</span>
                           </span>
                         </div>
                       </div>
@@ -1902,7 +1909,39 @@ export default function AdminPage() {
           </div>
 
           {activeTab === "products" && (
-            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
+              {/* Choice 1: Bulk Photo Upload (1 Photo = 1 Product) */}
+              <button
+                onClick={handleOpenBulkPhotoUpload}
+                className="py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                title="Select 10+ photos from your device to upload 10+ different products with batch editing"
+              >
+                <Images className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-300" />
+                <span>Bulk Upload 📸</span>
+              </button>
+
+              {/* Choice 2: Add Single Toy (One by One) */}
+              <button
+                onClick={handleOpenAddProduct}
+                className="py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center justify-center gap-1.5 sm:gap-2 hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                title="Upload one product at a time with optional multi-photo gallery"
+              >
+                <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                <span>Add 1 by 1</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  setActiveTab("bracelet_studio");
+                }}
+                className="py-2 px-3 sm:px-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black font-fredoka text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
+                title="Open Custom Bracelet Studio to assemble & add bracelets"
+              >
+                <Layers className="w-3.5 h-3.5 text-amber-300" />
+                <span className="truncate">Assemble Bracelet 🔗</span>
+              </button>
+
               {products.length > 0 && (
                 <button
                   type="button"
@@ -1913,45 +1952,13 @@ export default function AdminPage() {
                       showToast("All products wiped from database. Catalog is now empty.");
                     }
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-rose-200 dark:border-rose-800/50"
+                  className="py-2 px-3 sm:px-3.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-rose-200 dark:border-rose-800/50"
                   title="Wipe all products from database (Leave nothing behind)"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Wipe All Products</span>
+                  <span className="truncate">Wipe All</span>
                 </button>
               )}
-
-              <button
-                onClick={() => {
-                  sounds.playPop();
-                  setActiveTab("bracelet_studio");
-                }}
-                className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black font-fredoka text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
-                title="Open Custom Bracelet Studio to assemble & add bracelets"
-              >
-                <Layers className="w-3.5 h-3.5 text-amber-300" />
-                <span>Assemble Bracelet Product 🔗</span>
-              </button>
-
-              {/* Choice 1: Bulk Photo Upload (1 Photo = 1 Product) */}
-              <button
-                onClick={handleOpenBulkPhotoUpload}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer"
-                title="Select 10+ photos from your device to upload 10+ different products with batch editing"
-              >
-                <Images className="w-4 h-4 text-amber-300" />
-                <span>Bulk Photos Upload 📸</span>
-              </button>
-
-              {/* Choice 2: Add Single Toy (One by One) */}
-              <button
-                onClick={handleOpenAddProduct}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all cursor-pointer"
-                title="Upload one product at a time with optional multi-photo gallery"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add One by One</span>
-              </button>
             </div>
           )}
 
@@ -2088,15 +2095,15 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* Products Grid: 2 columns on mobile phone, 2 on tablet, 3-4 on desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
               {filteredProducts.map((prod) => {
                 const discountedPrice = prod.discount > 0 ? prod.price * (1 - prod.discount / 100) : prod.price;
 
                 return (
                   <div
                     key={prod.id}
-                    className={`p-4 rounded-3xl bg-white dark:bg-slate-900 border transition-all flex flex-col justify-between shadow-sm ${
+                    className={`p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border transition-all flex flex-col justify-between shadow-sm ${
                       prod.stock < 5
                         ? "border-amber-400 dark:border-amber-700/80 ring-2 ring-amber-400/20 shadow-amber-500/5"
                         : "border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-slate-700"
@@ -2104,7 +2111,7 @@ export default function AdminPage() {
                   >
                     <div>
                       {/* Image Preview */}
-                      <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-3">
+                      <div className="relative w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-2 sm:mb-3">
                         <Image
                           src={prod.image}
                           alt={prod.name}
@@ -2113,51 +2120,51 @@ export default function AdminPage() {
                           unoptimized={Boolean(prod.image?.startsWith("data:"))}
                         />
                         {prod.discount > 0 && (
-                          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-rose-500 text-white text-[10px] font-black uppercase">
-                            -{prod.discount}% OFF
+                          <span className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg bg-rose-500 text-white text-[9px] sm:text-[10px] font-black uppercase">
+                            -{prod.discount}%
                           </span>
                         )}
                         {prod.images && prod.images.length > 1 && (
-                          <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold flex items-center gap-1 shadow-xs">
-                            <Images className="w-3 h-3 text-emerald-400" />
-                            <span>{prod.images.length} photos</span>
+                          <span className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg bg-black/75 backdrop-blur-sm text-white text-[8px] sm:text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                            <Images className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-400" />
+                            <span>{prod.images.length}</span>
                           </span>
                         )}
-                        <span className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-sm text-amber-300 text-[10px] font-bold">
-                          +{prod.pt} VIP pt
+                        <span className="absolute bottom-1.5 left-1.5 sm:bottom-2.5 sm:left-2.5 px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg bg-black/75 backdrop-blur-sm text-amber-300 text-[8px] sm:text-[10px] font-bold">
+                          +{prod.pt} pt
                         </span>
                       </div>
 
                       {/* Info */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      <div className="space-y-0.5 sm:space-y-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 truncate">
                             {prod.cat}
                           </span>
                           {prod.code && (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold text-[10px] border border-emerald-300 dark:border-emerald-700/50">
-                              CODE: {prod.code}
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold text-[8px] sm:text-[10px] border border-emerald-300 dark:border-emerald-700/50 truncate">
+                              {prod.code}
                             </span>
                           )}
                         </div>
-                        <h4 className="font-black text-sm font-fredoka text-slate-900 dark:text-white line-clamp-1">
+                        <h4 className="font-black text-xs sm:text-sm font-fredoka text-slate-900 dark:text-white line-clamp-1">
                           {prod.name}
                         </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+                        <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
                           {prod.nameKh || prod.bio}
                         </p>
 
-                        <div className="flex items-baseline gap-2 pt-1">
-                          <span className="text-base font-black text-amber-600 dark:text-toy-yellow font-fredoka">
+                        <div className="flex flex-wrap items-baseline gap-1 sm:gap-2 pt-0.5 sm:pt-1">
+                          <span className="text-sm sm:text-base font-black text-amber-600 dark:text-toy-yellow font-fredoka">
                             {formatPrice(discountedPrice, currency)}
                           </span>
                           {prod.discount > 0 && (
-                            <span className="text-xs line-through text-slate-400">
+                            <span className="text-[10px] sm:text-xs line-through text-slate-400">
                               {formatPrice(prod.price, currency)}
                             </span>
                           )}
                           <span
-                            className={`ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                            className={`ml-auto text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-md ${
                               prod.stock === 0
                                 ? "bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800"
                                 : prod.stock < 5
@@ -2165,19 +2172,19 @@ export default function AdminPage() {
                                 : "text-slate-500 font-bold"
                             }`}
                           >
-                            {prod.stock === 0 ? "Out of Stock" : prod.stock < 5 ? `⚠️ Low: ${prod.stock}` : `Stock: ${prod.stock}`}
+                            {prod.stock === 0 ? "Out" : prod.stock < 5 ? `⚠️ ${prod.stock}` : `Stock: ${prod.stock}`}
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                    <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-slate-800 flex gap-1.5 sm:gap-2">
                       <button
                         onClick={() => handleOpenEditProduct(prod)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+                        className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all"
                       >
-                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <Edit2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Edit</span>
                       </button>
 
@@ -2189,11 +2196,11 @@ export default function AdminPage() {
                             showToast(`Deleted "${prod.name}" from store.`);
                           }
                         }}
-                        className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40"
+                        className="py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all border border-rose-200 dark:border-rose-900/40"
                         title="Delete product from store"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
+                        <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                        <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
                   </div>
@@ -2721,35 +2728,35 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
                 {filteredCharms.map((charm) => (
                   <div
                     key={charm.id}
-                    className="p-4 rounded-3xl bg-black dark:bg-black border border-zinc-800 shadow-md hover:shadow-lg hover:border-emerald-500/50 transition-all flex flex-col justify-between group"
+                    className="p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-black dark:bg-black border border-zinc-800 shadow-md hover:shadow-lg hover:border-emerald-500/50 transition-all flex flex-col justify-between group"
                   >
                     {/* Top Row: Category badge, Charm Code & popularity */}
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="px-2.5 py-0.5 rounded-full bg-zinc-900 text-zinc-300 text-[10px] font-bold uppercase tracking-wider border border-zinc-700">
+                    <div className="flex items-center justify-between text-xs mb-2 sm:mb-3 gap-1">
+                      <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                        <span className="px-1.5 sm:px-2.5 py-0.5 rounded-full bg-zinc-900 text-zinc-300 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider border border-zinc-700 truncate">
                           {charm.category}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 font-mono font-black text-[10px] border border-emerald-700/60">
+                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 font-mono font-black text-[8px] sm:text-[10px] border border-emerald-700/60 truncate">
                           #{getCharmCode(charm)}
                         </span>
                       </div>
                       {charm.isPopular && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 text-[10px] font-black border border-amber-700/60 flex items-center gap-1">
+                        <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 text-[8px] sm:text-[10px] font-black border border-amber-700/60 flex items-center gap-1 flex-shrink-0">
                           <span>⭐</span>
-                          <span>Popular</span>
+                          <span className="hidden sm:inline">Popular</span>
                         </span>
                       )}
                     </div>
 
                     {/* Center Preview: Side-by-Side Face Photo & Bracelet Link Inlay */}
-                    <div className="flex items-center justify-around py-3 px-2 bg-zinc-950/80 rounded-2xl border border-zinc-800 my-2">
+                    <div className="flex items-center justify-around py-2 sm:py-3 px-1 sm:px-2 bg-zinc-950/80 rounded-xl sm:rounded-2xl border border-zinc-800 my-1.5 sm:my-2">
                       {/* Left: Charm Face (Uploaded Photo) */}
                       <div className="flex flex-col items-center">
-                        <div className="relative w-12 h-10 rounded-lg overflow-hidden border border-zinc-700 bg-black shadow-xs mb-1">
+                        <div className="relative w-9 h-8 sm:w-12 sm:h-10 rounded-lg overflow-hidden border border-zinc-700 bg-black shadow-xs mb-1">
                           <Image
                             src={charm.image || "/assets/charm_clean.png"}
                             alt={charm.name}
@@ -2758,12 +2765,12 @@ export default function AdminPage() {
                             unoptimized={Boolean(charm.image?.startsWith("data:"))}
                           />
                         </div>
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">
-                          Face Photo
+                        <span className="text-[8px] sm:text-[9px] font-bold text-zinc-400 uppercase tracking-tight">
+                          Face
                         </span>
                       </div>
 
-                      <div className="h-8 w-px bg-zinc-800" />
+                      <div className="h-6 sm:h-8 w-px bg-zinc-800" />
 
                       {/* Right: Bracelet Link Inlay (Cut-Out) */}
                       <div className="flex flex-col items-center">
@@ -2771,50 +2778,50 @@ export default function AdminPage() {
                           charm={charm}
                           slotIndex={0}
                           finish="silver"
-                          size="preview"
+                          size="compact"
                         />
-                        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-tight mt-1">
-                          Bracelet Link
+                        <span className="text-[8px] sm:text-[9px] font-bold text-emerald-400 uppercase tracking-tight mt-0.5 sm:mt-1">
+                          Link
                         </span>
                       </div>
                     </div>
 
                     {/* Charm Info */}
-                    <div className="space-y-1 my-2">
-                      <h4 className="font-black text-sm font-fredoka text-white line-clamp-1">
+                    <div className="space-y-0.5 sm:space-y-1 my-1 sm:my-2">
+                      <h4 className="font-black text-xs sm:text-sm font-fredoka text-white line-clamp-1">
                         {charm.name}
                       </h4>
                       {charm.nameKh && (
-                        <p className="text-xs text-zinc-400 line-clamp-1">
+                        <p className="text-[10px] sm:text-xs text-zinc-400 line-clamp-1">
                           {charm.nameKh}
                         </p>
                       )}
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-base font-black font-fredoka text-amber-400">
+                      <div className="flex items-center justify-between pt-0.5 sm:pt-1">
+                        <span className="text-sm sm:text-base font-black font-fredoka text-amber-400">
                           {formatPrice(charm.price, currency)}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          ID: {charm.id.slice(0, 14)}
+                        <span className="text-[9px] sm:text-[10px] text-zinc-400 font-mono truncate max-w-[80px]">
+                          {charm.id.slice(0, 10)}
                         </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+                    <div className="pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 sm:gap-2">
                       <button
                         onClick={() => handleOpenEditCharm(charm)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+                        className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all"
                       >
-                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <Edit2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Edit</span>
                       </button>
                       <button
                         onClick={() => handleDeleteCharm(charm.id, charm.name)}
-                        className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40"
+                        className="py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40"
                         title="Delete charm from store"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
+                        <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                        <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
                   </div>

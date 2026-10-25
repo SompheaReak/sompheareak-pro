@@ -11,6 +11,16 @@ export const CategoryArcade: React.FC = () => {
   const getCategoryCount = (catId: string) => {
     if (catId === "all") return products.length;
     if (catId === "bracelet") return "Studio 🔗";
+    if (catId === "toy") {
+      return products.filter(
+        (p) =>
+          p.cat === "toy" ||
+          p.cat === "toy-universe" ||
+          p.cat === "tech-toys" ||
+          p.cat === "blind-box" ||
+          p.cat === "plushies"
+      ).length;
+    }
     return products.filter((p) => p.cat === catId).length;
   };
 

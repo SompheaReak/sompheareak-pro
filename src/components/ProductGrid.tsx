@@ -20,7 +20,14 @@ export const ProductGrid: React.FC = () => {
 
   const filteredAndSortedProducts = useMemo(() => {
     let list = products.filter((p) => {
-      const matchCat = selectedCategory === "all" || p.cat === selectedCategory;
+      const matchCat =
+        selectedCategory === "all" ||
+        p.cat === selectedCategory ||
+        (selectedCategory === "toy" &&
+          (p.cat === "toy-universe" ||
+            p.cat === "tech-toys" ||
+            p.cat === "blind-box" ||
+            p.cat === "plushies"));
       const q = searchQuery.trim().toLowerCase();
       const matchSearch =
         !q ||

@@ -16,7 +16,6 @@ export const ReceiptBraceletBand: React.FC<ReceiptBraceletBandProps> = ({
   compact = false,
 }) => {
   const [highlightedSlot, setHighlightedSlot] = useState<number | null>(null);
-  const [displayMode, setDisplayMode] = useState<"ribbon" | "grid">("ribbon");
 
   if (!bracelet) {
     return null;
@@ -103,33 +102,10 @@ export const ReceiptBraceletBand: React.FC<ReceiptBraceletBandProps> = ({
           </div>
         </div>
 
-        {/* View Switcher: Ribbon track vs Wrapped Grid view */}
-        <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/80 p-0.5 rounded-xl print:hidden text-[10px] font-bold">
-          <button
-            type="button"
-            onClick={() => setDisplayMode("ribbon")}
-            className={`px-2 py-1 rounded-lg flex items-center gap-1 transition-all ${
-              displayMode === "ribbon"
-                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs font-black"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Layers className="w-3 h-3" />
-            <span>Ribbon Track</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setDisplayMode("grid")}
-            className={`px-2 py-1 rounded-lg flex items-center gap-1 transition-all ${
-              displayMode === "grid"
-                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs font-black"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Grid className="w-3 h-3" />
-            <span>Wrap View (16-20)</span>
-          </button>
-        </div>
+        {/* Info label */}
+        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold normal-case">
+          All {targetCount} Links Assembled · Zero-Scroll Fitted View
+        </span>
       </div>
 
       {/* 2. Highlighted Charm Details Banner */}
@@ -151,78 +127,94 @@ export const ReceiptBraceletBand: React.FC<ReceiptBraceletBandProps> = ({
         </div>
       )}
 
-      {/* 3. Full Connected Bracelet Display (Ribbon or Wrap Grid) */}
-      <div className="p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-950/80">
-        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
-          <span className="flex items-center gap-1 font-fredoka">
-            <Layers className="w-3 h-3 text-emerald-500" />
-            <span>Complete {targetCount}-Charm Assembled Modular Bracelet:</span>
-          </span>
-          <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold normal-case print:hidden">
-            {displayMode === "ribbon" ? "← Scroll sideways to inspect all links →" : "All links assembled"}
-          </span>
-        </div>
+      {/* 3. Full Connected 16-20 Charm Bracelet (Fitted 2-Row Band - Fits Any Box with ZERO scroll) */}
+      <div className="p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-950/80 space-y-3">
+        {/* Row 1: Top Loop of Modular Bracelet */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <span className="flex items-center gap-1 font-fredoka">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              <span>Band Half 1: Links #1 – #{Math.ceil(targetCount / 2)}</span>
+            </span>
+            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[8px] sm:text-[9px]">
+              {finish.toUpperCase()} MODULAR
+            </span>
+          </div>
 
-        {/* Display Mode A: Continuous Horizontal Seamless Ribbon Track */}
-        {displayMode === "ribbon" && (
-          <div className="w-full overflow-x-auto py-2.5 px-1 scrollbar-thin touch-pan-x [-webkit-overflow-scrolling:touch] print:hidden">
-            <div className="flex items-center min-w-max mx-auto py-1">
-              {fullBraceletSlots.map(({ slotIndex, charm }, idx) => (
-                <div
-                  key={`receipt-slot-ribbon-${idx}-${charm?.id || slotIndex}`}
-                  className="flex flex-col items-center flex-shrink-0"
-                  onMouseEnter={() => setHighlightedSlot(slotIndex)}
-                  onMouseLeave={() => setHighlightedSlot(null)}
-                >
+          <div className="flex items-center w-full gap-0.5 sm:gap-1.5 bg-white dark:bg-slate-900 p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            {fullBraceletSlots.slice(0, Math.ceil(targetCount / 2)).map(({ slotIndex, charm }) => (
+              <div
+                key={`receipt-slot-${slotIndex}-${charm?.id || slotIndex}`}
+                className="flex-1 min-w-0 flex flex-col items-center cursor-pointer group"
+                onClick={() => setHighlightedSlot(highlightedSlot === slotIndex ? null : slotIndex)}
+                onMouseEnter={() => setHighlightedSlot(slotIndex)}
+                onMouseLeave={() => setHighlightedSlot(null)}
+              >
+                <div className="w-full">
                   <ConnectedCharmLink
                     charm={charm}
                     slotIndex={slotIndex}
                     finish={finish}
                     isSelected={highlightedSlot === slotIndex}
-                    onSelect={() => setHighlightedSlot(highlightedSlot === slotIndex ? null : slotIndex)}
-                    size={compact ? "compact" : "preview"}
+                    size="fill"
                   />
-
-                  {/* Slot Number Tag */}
-                  <span
-                    className={`mt-1 text-[8px] font-mono font-black px-1.5 py-0.5 rounded transition-all ${
-                      highlightedSlot === slotIndex
-                        ? "bg-emerald-500 text-white scale-110 shadow-xs"
-                        : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                    }`}
-                  >
-                    #{slotIndex + 1}
-                  </span>
                 </div>
-              ))}
-            </div>
+                <span
+                  className={`mt-1 text-[8px] sm:text-[9px] font-mono font-bold px-1 rounded transition-all truncate ${
+                    highlightedSlot === slotIndex
+                      ? "bg-emerald-500 text-white font-black scale-105"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  #{slotIndex + 1}
+                </span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Display Mode B: Wrapped 8-10 Columns Grid View (Used for Wrap mode & Default for Print) */}
-        <div
-          className={`${
-            displayMode === "grid" ? "grid" : "hidden print:grid"
-          } grid-cols-8 sm:grid-cols-10 gap-1 sm:gap-1.5 py-2`}
-        >
-          {fullBraceletSlots.map(({ slotIndex, charm }, idx) => (
-            <div
-              key={`receipt-slot-grid-${idx}-${charm?.id || slotIndex}`}
-              className="flex flex-col items-center p-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all cursor-pointer"
-              onClick={() => setHighlightedSlot(highlightedSlot === slotIndex ? null : slotIndex)}
-            >
-              <ConnectedCharmLink
-                charm={charm}
-                slotIndex={slotIndex}
-                finish={finish}
-                isSelected={highlightedSlot === slotIndex}
-                size="compact"
-              />
-              <span className="mt-0.5 text-[8px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                #{slotIndex + 1}
-              </span>
-            </div>
-          ))}
+        {/* Row 2: Bottom Loop of Modular Bracelet */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <span className="flex items-center gap-1 font-fredoka">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              <span>Band Half 2: Links #{Math.ceil(targetCount / 2) + 1} – #{targetCount}</span>
+            </span>
+            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[8px] sm:text-[9px]">
+              INTERLOCKING CLASP
+            </span>
+          </div>
+
+          <div className="flex items-center w-full gap-0.5 sm:gap-1.5 bg-white dark:bg-slate-900 p-1.5 sm:p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            {fullBraceletSlots.slice(Math.ceil(targetCount / 2)).map(({ slotIndex, charm }) => (
+              <div
+                key={`receipt-slot-${slotIndex}-${charm?.id || slotIndex}`}
+                className="flex-1 min-w-0 flex flex-col items-center cursor-pointer group"
+                onClick={() => setHighlightedSlot(highlightedSlot === slotIndex ? null : slotIndex)}
+                onMouseEnter={() => setHighlightedSlot(slotIndex)}
+                onMouseLeave={() => setHighlightedSlot(null)}
+              >
+                <div className="w-full">
+                  <ConnectedCharmLink
+                    charm={charm}
+                    slotIndex={slotIndex}
+                    finish={finish}
+                    isSelected={highlightedSlot === slotIndex}
+                    size="fill"
+                  />
+                </div>
+                <span
+                  className={`mt-1 text-[8px] sm:text-[9px] font-mono font-bold px-1 rounded transition-all truncate ${
+                    highlightedSlot === slotIndex
+                      ? "bg-emerald-500 text-white font-black scale-105"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  #{slotIndex + 1}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
