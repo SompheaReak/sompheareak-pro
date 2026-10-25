@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProducts, addProduct, resetProducts, wipeAllProducts } from "@/lib/db";
+import { getProducts, addProduct, bulkAddProducts, resetProducts, wipeAllProducts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,6 +28,21 @@ export async function POST(request: Request) {
     if (body.action === "reset" || body.action === "wipe") {
       const wiped = await wipeAllProducts();
       return NextResponse.json({ success: true, message: "All products wiped from database", data: wiped, count: 0 });
+    }
+
+    // Support Bulk Product Upload
+    if (body.action === "bulk" || Array.isArray(body.products) || Array.isArray(body)) {
+      const productList = Array.isArray(body.products) ? body.products : (Array.isArray(body) ? body : []);
+      if (productList.length === 0) {
+        return NextResponse.json({ success: false, error: "No products provided in bulk payload" }, { status: 400 });
+      }
+      const updated = await bulkAddProducts(productList, Boolean(body.replaceMode));
+      return NextResponse.json({
+        success: true,
+        message: `Successfully uploaded ${productList.length} products in bulk`,
+        data: updated,
+        count: updated.length,
+      }, { status: 201 });
     }
 
     if (!body.name) {

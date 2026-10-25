@@ -297,6 +297,56 @@ export async function addProduct(newProduct: Omit<Product, "id"> & { id?: string
   return product;
 }
 
+export async function bulkAddProducts(
+  newProducts: Array<Omit<Product, "id"> & { id?: string }>,
+  replaceMode: boolean = false
+): Promise<Product[]> {
+  const db = await getDbAsync();
+
+  const processedProducts: Product[] = newProducts.map((np, idx) => {
+    const id = np.id || `toy-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`;
+    const code = np.code || `SPK-${Math.floor(1000 + Math.random() * 9000)}`;
+    return {
+      ...np,
+      id,
+      code,
+      nameKh: np.nameKh || np.name,
+      cat: np.cat || "minifigure",
+      price: Number(np.price) || 5.0,
+      discount: Number(np.discount) || 0,
+      stock: Number(np.stock) || 10,
+      pt: Number(np.pt) || 4,
+      image: np.image || "https://images.unsplash.com/photo-1589254065878-42c9da997008?auto=format&fit=crop&w=800&q=80",
+      images: Array.isArray(np.images) && np.images.length > 0 ? np.images : [np.image || "https://images.unsplash.com/photo-1589254065878-42c9da997008?auto=format&fit=crop&w=800&q=80"],
+      bio: np.bio || "Fun toy collectible.",
+      bioKh: np.bioKh || "ប្រដាប់ក្មេងលេងគុណភាពខ្ពស់។",
+      rarity: np.rarity || "Rare",
+      rating: np.rating || 5.0,
+      reviewsCount: np.reviewsCount || 1,
+      featured: np.featured !== undefined ? np.featured : true,
+      isNew: np.isNew !== undefined ? np.isNew : true,
+      free_delivery: np.free_delivery !== undefined ? np.free_delivery : true,
+      ageRecommendation: np.ageRecommendation || "Ages 4+",
+      dimensions: np.dimensions || "10cm x 8cm",
+    };
+  });
+
+  if (replaceMode) {
+    db.products = processedProducts;
+  } else {
+    // Append or update existing by code/id
+    const existingMap = new Map(db.products.map((p) => [p.code || p.id, p]));
+    for (const prod of processedProducts) {
+      existingMap.set(prod.code || prod.id, prod);
+    }
+    db.products = Array.from(existingMap.values());
+  }
+
+  saveDb(db);
+  await saveNeonKey("products", db.products);
+  return db.products;
+}
+
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
   const db = await getDbAsync();
   const idx = db.products.findIndex((p) => p.id === id);

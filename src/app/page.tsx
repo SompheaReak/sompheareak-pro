@@ -19,6 +19,7 @@ import { CustomerBar } from "@/components/CustomerBar";
 import { CustomerAccountModal } from "@/components/CustomerAccountModal";
 import { OrderHistoryModal } from "@/components/OrderHistoryModal";
 import { OrderReceiptModal } from "@/components/OrderReceiptModal";
+import { AdminLiveStorefrontBar } from "@/components/admin/AdminLiveStorefrontBar";
 import { useStore } from "@/context/StoreContext";
 import { Sparkles, Trophy, Gift, ArrowRight, ShieldCheck, Heart, Layers, Droplets } from "lucide-react";
 import { sounds } from "@/utils/audio";
@@ -208,6 +209,9 @@ export default function HomePage() {
 
       {/* Floating Bottom Customer Bar */}
       <CustomerBar />
+
+      {/* Admin Floating Live Toolbar (active when admin is logged in) */}
+      <AdminLiveStorefrontBar />
     </main>
   );
 }

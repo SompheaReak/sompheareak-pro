@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/context/StoreContext";
-import { CustomerOrder, OrderStatus, CartItem, Product } from "@/types/store";
+import { CustomerOrder, OrderStatus, CartItem, Product, CustomBraceletItem, Charm } from "@/types/store";
 import { sounds } from "@/utils/audio";
 import { formatPrice } from "@/utils/currency";
 import {
@@ -127,6 +127,50 @@ export const OrderReceiptModal: React.FC = () => {
   const currentTotalKhr = Math.round(currentTotal * 4100);
   const currentPoints = Math.round(currentTotal);
 
+  // Helper to extract or construct full bracelet data for any bracelet in the receipt
+  const getBraceletData = (item: CartItem): CustomBraceletItem | null => {
+    if (item.customBracelet) return item.customBracelet;
+    const isBraceletProd =
+      item.product?.cat === "bracelet" ||
+      (item.product?.name && item.product.name.toLowerCase().includes("bracelet"));
+    if (isBraceletProd && item.product) {
+      let finish: "silver" | "gold" | "rose" | "black" = "silver";
+      const lower = (item.product.name + " " + item.product.bio).toLowerCase();
+      if (lower.includes("gold") && !lower.includes("rose")) finish = "gold";
+      else if (lower.includes("rose")) finish = "rose";
+      else if (lower.includes("black")) finish = "black";
+
+      return {
+        id: item.product.id,
+        styleId: item.product.code || item.product.id,
+        finish,
+        sizeLinks: 16,
+        charms: [
+          {
+            slot: 0,
+            charm: {
+              id: `prod-${item.product.id}`,
+              name: item.product.name,
+              nameKh: item.product.nameKh,
+              price: item.product.price,
+              image: item.product.image,
+              category: "bracelet",
+            } as Charm,
+          },
+        ],
+        packaging: "premium",
+        unitPrice: item.product.price,
+        quantity: item.quantity,
+        points: item.product.pt,
+      };
+    }
+    return null;
+  };
+
+  const customBraceletItems = editedItems
+    .map((it) => ({ item: it, bracelet: getBraceletData(it) }))
+    .filter((x): x is { item: CartItem; bracelet: CustomBraceletItem } => x.bracelet !== null);
+
   // Edit Handlers
   const handleItemQtyChange = (idx: number, delta: number) => {
     sounds.playPop();
@@ -229,7 +273,7 @@ export const OrderReceiptModal: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl text-slate-900 dark:text-white max-h-[94vh] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-4 print:text-black print:dark:text-black print:dark:bg-white"
+          className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl text-slate-900 dark:text-white max-h-[90dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-4 print:text-black print:dark:text-black print:dark:bg-white"
         >
           {/* Top Actions: Edit Toggle and Close */}
           <div className="absolute top-5 right-5 flex items-center gap-2 print:hidden">
@@ -345,6 +389,41 @@ export const OrderReceiptModal: React.FC = () => {
             </div>
           )}
 
+          {/* ==================================================== */}
+          {/* TOP OF RECEIPT: HERO FULL ASSEMBLED BRACELET SHOWCASE */}
+          {/* ==================================================== */}
+          {customBraceletItems.length > 0 && (
+            <div className="my-4 p-3.5 sm:p-5 rounded-3xl bg-slate-900 border-2 border-emerald-500/60 shadow-xl text-white">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-emerald-500/30">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-black font-fredoka text-sm sm:text-base text-white tracking-wide flex items-center gap-2">
+                      <span>Full Assembled Italian Modular Bracelet</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40">
+                        16–20 Charms
+                      </span>
+                    </h3>
+                    <p className="text-[10px] text-slate-300">
+                      Crafted in the exact same style, sequence, and finish ordered by {order.customerName}.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-slate-950 font-fredoka">
+                  Exact Customer Custom Build 🔗
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {customBraceletItems.map(({ item, bracelet }, bIdx) => (
+                  <ReceiptBraceletBand key={`top-hero-bracelet-${bIdx}`} bracelet={bracelet} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Itemized Products List */}
           <div className="py-3 space-y-2.5">
             <div className="flex items-center justify-between">
@@ -360,147 +439,199 @@ export const OrderReceiptModal: React.FC = () => {
 
             <div className="space-y-3">
               {editedItems.map((item, idx) => {
-                const isCustomBracelet = Boolean(item.customBracelet);
+                const braceletData = getBraceletData(item);
+                const isCustomBracelet = Boolean(braceletData);
                 const title =
                   item.product?.name ||
                   (item.customBracelet
-                    ? `Custom Italian Modular Bracelet (${item.customBracelet.sizeLinks} links)`
+                    ? `Custom Italian Modular Bracelet (${item.customBracelet.sizeLinks || 16} links)`
                     : "Item");
                 const code = item.product?.code;
                 const price = item.product
                   ? item.product.price * (1 - (item.product.discount || 0) / 100)
                   : item.customBracelet?.unitPrice || 0;
                 const totalItem = price * item.quantity;
-                const image =
-                  item.product?.image ||
-                  (item.customBracelet?.charms && item.customBracelet.charms.length > 0
-                    ? item.customBracelet.charms[0].charm?.image ||
-                      item.customBracelet.charms[0].charm?.plateImage ||
-                      "/assets/charm_clean.png"
-                    : "/assets/charm_clean.png");
+                const image = item.product?.image || "/assets/charm_clean.png";
 
                 return (
                   <div
                     key={idx}
-                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 transition-all shadow-xs"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 transition-all shadow-xs space-y-3"
                   >
-                    {/* Item Top Summary Row: Picture beside Title & Description */}
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs">
-                      <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                        {/* Prominent Product Picture */}
-                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 flex-shrink-0 shadow-xs flex items-center justify-center p-1">
-                          <Image
-                            src={image}
-                            alt={title}
-                            fill
-                            className="object-contain p-0.5"
-                            unoptimized={Boolean(image?.startsWith("data:"))}
-                          />
+                    {isCustomBracelet && braceletData ? (
+                      /* CUSTOM BRACELET ITEM CARD: Full bracelet band appears ON TOP across full width, NO side picture */
+                      <div className="space-y-3">
+                        {/* 1. Full Bracelet Display on Top of Item */}
+                        <div className="w-full">
+                          <ReceiptBraceletBand bracelet={braceletData} compact={false} />
                         </div>
 
-                        {/* Product Title and Description right beside the picture */}
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-bold text-slate-900 dark:text-white font-fredoka text-sm sm:text-base leading-tight">
-                              {title}
-                            </span>
-                            {code && (
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-300 dark:border-slate-700">
-                                {code}
+                        {/* 2. Specs, Title, Quantity and Price underneath */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-bold text-slate-900 dark:text-white font-fredoka text-sm sm:text-base leading-tight">
+                                {title}
                               </span>
-                            )}
-                            {item.product?.cat && (
                               <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300">
-                                {item.product.cat}
+                                {braceletData.finish.toUpperCase()} INOX STEEL
                               </span>
-                            )}
-                          </div>
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300">
+                                {braceletData.packaging === "premium" ? "Velvet Gift Box 🎁" : "Presentation Packaging 📦"}
+                              </span>
+                            </div>
 
-                          {/* Product Description */}
-                          {item.product?.bio && (
-                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-                              {item.product.bio}
-                            </p>
-                          )}
-                          {item.product?.bioKh && item.product.bioKh !== item.product.bio && (
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                              {item.product.bioKh}
-                            </p>
-                          )}
-
-                          {/* Custom Bracelet Description */}
-                          {item.customBracelet && (
                             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                               Custom 9mm Italian modular charm bracelet in 316L waterproof{" "}
                               <span className="font-bold text-slate-900 dark:text-white uppercase">
-                                {item.customBracelet.finish} Inox Steel
+                                {braceletData.finish} Inox Steel
                               </span>{" "}
-                              crafted with{" "}
-                              <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                                {item.customBracelet.sizeLinks} links
-                              </span>{" "}
-                              ({item.customBracelet.charms.length} personalized charms installed).
+                              with personalized charms assembled in customer sequence.
                             </p>
-                          )}
 
-                          {/* Unit Price & Qty breakdown */}
-                          <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                            <span className="font-bold text-slate-800 dark:text-slate-200">
-                              ${price.toFixed(2)} each
-                            </span>
-                            <span>•</span>
-                            <span>Quantity: <strong className="text-slate-900 dark:text-white">{item.quantity}</strong></span>
-                            <span>•</span>
-                            <span className="font-black text-amber-600 dark:text-toy-yellow font-fredoka text-xs">
-                              Subtotal: ${totalItem.toFixed(2)}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                              <span className="font-bold text-slate-800 dark:text-slate-200">${price.toFixed(2)} each</span>
+                              <span>•</span>
+                              <span>Quantity: <strong className="text-slate-900 dark:text-white">{item.quantity}</strong></span>
+                              <span>•</span>
+                              <span className="font-black text-amber-600 dark:text-toy-yellow font-fredoka text-xs">
+                                Subtotal: ${totalItem.toFixed(2)}
+                              </span>
+                            </div>
                           </div>
+
+                          {/* Quantity controls if editing */}
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+                              <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => handleItemQtyChange(idx, -1)}
+                                  className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-rose-500 transition-colors"
+                                >
+                                  -
+                                </button>
+                                <span className="px-2 font-mono font-bold text-xs">{item.quantity}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleItemQtyChange(idx, 1)}
+                                  className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-emerald-500 transition-colors"
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <span className="font-fredoka font-black text-base text-slate-900 dark:text-white w-16 text-right">
+                                ${totalItem.toFixed(2)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(idx)}
+                                className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors"
+                                title="Remove item from receipt"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-right flex-shrink-0 self-end sm:self-center font-fredoka font-black text-base text-slate-900 dark:text-white">
+                              <span>${totalItem.toFixed(2)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
+                    ) : (
+                      /* REGULAR PRODUCT ITEM CARD (Toys, Minifigures): Picture on the Side */
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs">
+                        <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                          {/* Side Picture for Non-Bracelet Products */}
+                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 flex-shrink-0 shadow-xs flex items-center justify-center p-1">
+                            <Image
+                              src={image}
+                              alt={title}
+                              fill
+                              className="object-contain p-0.5"
+                              unoptimized={Boolean(image?.startsWith("data:"))}
+                            />
+                          </div>
 
-                      {/* Quantity controls if editing */}
-                      {isEditing ? (
-                        <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-start pt-1 sm:pt-0">
-                          <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs">
+                          {/* Product Details right beside side picture */}
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-bold text-slate-900 dark:text-white font-fredoka text-sm sm:text-base leading-tight">
+                                {title}
+                              </span>
+                              {code && (
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-300 dark:border-slate-700">
+                                  {code}
+                                </span>
+                              )}
+                              {item.product?.cat && (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300">
+                                  {item.product.cat}
+                                </span>
+                              )}
+                            </div>
+
+                            {item.product?.bio && (
+                              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                                {item.product.bio}
+                              </p>
+                            )}
+                            {item.product?.bioKh && item.product.bioKh !== item.product.bio && (
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                                {item.product.bioKh}
+                              </p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                              <span className="font-bold text-slate-800 dark:text-slate-200">${price.toFixed(2)} each</span>
+                              <span>•</span>
+                              <span>Quantity: <strong className="text-slate-900 dark:text-white">{item.quantity}</strong></span>
+                              <span>•</span>
+                              <span className="font-black text-amber-600 dark:text-toy-yellow font-fredoka text-xs">
+                                Subtotal: ${totalItem.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quantity controls if editing */}
+                        {isEditing ? (
+                          <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-start pt-1 sm:pt-0">
+                            <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs">
+                              <button
+                                type="button"
+                                onClick={() => handleItemQtyChange(idx, -1)}
+                                className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-rose-500 transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="px-2 font-mono font-bold text-xs">{item.quantity}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleItemQtyChange(idx, 1)}
+                                className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-emerald-500 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <span className="font-fredoka font-black text-base text-slate-900 dark:text-white w-16 text-right">
+                              ${totalItem.toFixed(2)}
+                            </span>
                             <button
                               type="button"
-                              onClick={() => handleItemQtyChange(idx, -1)}
-                              className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-rose-500 transition-colors"
+                              onClick={() => handleRemoveItem(idx)}
+                              className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors"
+                              title="Remove item from receipt"
                             >
-                              -
-                            </button>
-                            <span className="px-2 font-mono font-bold text-xs">{item.quantity}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleItemQtyChange(idx, 1)}
-                              className="w-7 h-7 flex items-center justify-center font-bold text-slate-600 hover:text-emerald-500 transition-colors"
-                            >
-                              +
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                          <span className="font-fredoka font-black text-base text-slate-900 dark:text-white w-16 text-right">
-                            ${totalItem.toFixed(2)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors"
-                            title="Remove item from receipt"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="text-right flex-shrink-0 self-end sm:self-start font-fredoka font-black text-base text-slate-900 dark:text-white pt-1 sm:pt-0">
-                          <span>${totalItem.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* If Custom Italian Charm Bracelet: Render the Full Connected Bracelet Ribbon & Admin Verification Checklist */}
-                    {isCustomBracelet && item.customBracelet && (
-                      <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
-                        <ReceiptBraceletBand bracelet={item.customBracelet} />
+                        ) : (
+                          <div className="text-right flex-shrink-0 self-end sm:self-start font-fredoka font-black text-base text-slate-900 dark:text-white pt-1 sm:pt-0">
+                            <span>${totalItem.toFixed(2)}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

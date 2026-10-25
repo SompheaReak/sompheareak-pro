@@ -86,6 +86,8 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   input[type="tel"],
   input[type="password"],
   input[type="email"],
+  input[type="search"],
+  input:not([type]),
   select,
   textarea {
     font-size: 16px !important;

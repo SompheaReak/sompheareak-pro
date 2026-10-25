@@ -1,2 +1,2 @@
-import AdminNoticePage from "../admin/page";
-export default AdminNoticePage;
+import AdminPage from "../admin/page";
+export default AdminPage;

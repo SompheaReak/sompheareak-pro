@@ -601,7 +601,7 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
           )}
         </div>
 
-        {/* 8-col desktop / 4-col mobile grid or empty state */}
+        {/* 8-col grid on mobile and desktop (8 by 8 layout) or empty state */}
         {allDisplayCharms.length === 0 ? (
           <div className="py-12 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-6 space-y-2">
             <span className="text-3xl block">✨</span>
@@ -615,12 +615,12 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3">
+          <div className="grid grid-cols-8 gap-1 xs:gap-1.5 sm:gap-2.5 md:gap-3">
             {allDisplayCharms.map((charm) => (
               <div
                 key={charm.id}
                 onClick={() => handleAddCharm(charm)}
-                className="group relative rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 hover:border-emerald-500 dark:hover:border-emerald-400 p-2 sm:p-2.5 flex flex-col items-center justify-between cursor-pointer active:scale-95 transition-all shadow-xs hover:shadow-md select-none"
+                className="group relative rounded-lg sm:rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 hover:border-emerald-500 dark:hover:border-emerald-400 p-1 sm:p-2 sm:p-2.5 flex flex-col items-center justify-between cursor-pointer active:scale-90 transition-all shadow-xs hover:shadow-md select-none touch-manipulation"
                 title={`${language === "km" ? charm.nameKh : charm.name} - ${formatPrice(charm.price || 0.73, currency)}`}
               >
                 {/* Admin Delete Charm Button */}
@@ -635,26 +635,26 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
                         setSlots((prev) => prev.filter((c) => c.id !== charm.id));
                       }
                     }}
-                    className="absolute top-1 left-1 z-20 p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-xs"
+                    className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 z-20 p-0.5 sm:p-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-xs"
                     title={`Delete ${charm.name}`}
                   >
-                    <Trash2 className="w-2.5 h-2.5" />
+                    <Trash2 className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                   </button>
                 )}
 
-                <div className="relative w-12 h-12 sm:w-16 sm:h-16 my-1 flex items-center justify-center">
+                <div className="relative w-7 h-7 xs:w-8 xs:h-8 sm:w-14 sm:h-14 md:w-16 md:h-16 my-0.5 sm:my-1 flex items-center justify-center">
                   <Image
                     src={charm.image || "/assets/charm_clean.png"}
                     alt={charm.name}
                     fill
                     className="object-contain group-hover:scale-105 transition-transform duration-150 filter drop-shadow-xs"
                     unoptimized={Boolean(charm.image?.startsWith("data:"))}
-                    sizes="(max-width: 640px) 25vw, 120px"
+                    sizes="(max-width: 640px) 12.5vw, 120px"
                   />
                 </div>
 
-                <div className="w-full text-center mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
-                  <span className="block font-black font-fredoka text-xs text-emerald-600 dark:text-emerald-400">
+                <div className="w-full text-center mt-0.5 sm:mt-1 pt-0.5 sm:pt-1 border-t border-slate-100 dark:border-slate-700/60">
+                  <span className="block font-black font-fredoka text-[7.5px] xs:text-[8.5px] sm:text-xs text-emerald-600 dark:text-emerald-400 leading-none">
                     {formatPrice(charm.price || 0.73, currency)}
                   </span>
                 </div>

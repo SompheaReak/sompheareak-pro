@@ -14,6 +14,7 @@ import { NotificationToast } from "@/components/NotificationToast";
 import { CustomerAccountModal } from "@/components/CustomerAccountModal";
 import { OrderHistoryModal } from "@/components/OrderHistoryModal";
 import { OrderReceiptModal } from "@/components/OrderReceiptModal";
+import { AdminLiveStorefrontBar } from "@/components/admin/AdminLiveStorefrontBar";
 import { useStore } from "@/context/StoreContext";
 import { sounds } from "@/utils/audio";
 import {
@@ -239,6 +240,7 @@ export default function ItalyBraceletPage() {
       <CustomerAccountModal />
       <OrderHistoryModal />
       <OrderReceiptModal />
+      <AdminLiveStorefrontBar />
     </main>
   );
 }

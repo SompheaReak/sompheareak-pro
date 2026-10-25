@@ -77,7 +77,7 @@ export const CartDrawer: React.FC = () => {
           />
 
           {/* Drawer container */}
-          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+          <div className="absolute inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -226,7 +226,7 @@ export const CartDrawer: React.FC = () => {
 
               {/* Bottom Checkout & Voucher Section */}
               {cart.length > 0 && (
-                <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80">
+                <div className="p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80">
                   {/* Voucher Input */}
                   <div className="mb-4">
                     {activeVoucher ? (

@@ -15,6 +15,19 @@ export const DEFAULT_CATEGORY_BOXES: CategoryBox[] = [
     active: true,
   },
   {
+    id: "box-bracelet-unisex",
+    title: "Braclet for Male&Female",
+    titleKh: "ខ្សែដៃបុរស & នារី Braclet for Male&Female",
+    subtitle: "Premium 316L Stainless Steel · Unisex Collection",
+    image: "/assets/categories/bracelet-unisex.jpg",
+    actionType: "link",
+    actionValue: "/italy-bracelet",
+    span: "full",
+    badge: "UNISEX 🖤",
+    order: 2,
+    active: true,
+  },
+  {
     id: "box-minifigure",
     title: "MINIFIGURE",
     titleKh: "តុក្កតាមីនី Minifigure",
@@ -24,7 +37,7 @@ export const DEFAULT_CATEGORY_BOXES: CategoryBox[] = [
     actionValue: "minifigure",
     span: "half",
     badge: "VIRAL 🔥",
-    order: 2,
+    order: 3,
     active: true,
   },
   {
@@ -37,7 +50,7 @@ export const DEFAULT_CATEGORY_BOXES: CategoryBox[] = [
     actionValue: "toy-universe",
     span: "half",
     badge: "TRENDING ⚡",
-    order: 3,
+    order: 4,
     active: true,
   },
 ];
