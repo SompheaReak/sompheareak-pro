@@ -52,11 +52,27 @@ import {
   Upload,
   Dices,
   Images,
+  Check,
 } from "lucide-react";
 import { OrderReceiptModal } from "@/components/OrderReceiptModal";
 import { CustomBraceletStudio } from "@/components/CustomBraceletStudio";
 import { ReceiptBraceletBand } from "@/components/ReceiptBraceletBand";
 import { getCharmCode, generateUniqueCharmCode } from "@/data/charms";
+
+export interface BulkPhotoItem {
+  tempId: string;
+  code: string;
+  name: string;
+  nameKh: string;
+  cat: string;
+  price: string;
+  discount: string;
+  stock: string;
+  pt: string;
+  rarity: ToyRarity;
+  image: string;
+  fileName: string;
+}
 
 const ADMIN_PASSWORD = "Sompheareakshop1234";
 
@@ -180,6 +196,14 @@ export default function AdminPage() {
   >([]);
   const [bulkFileError, setBulkFileError] = useState<string>("");
   const [bulkIsSubmitting, setBulkIsSubmitting] = useState<boolean>(false);
+
+  // Multi-Photo Bulk Upload State (1 Photo = 1 Product)
+  const [bulkModalTab, setBulkModalTab] = useState<"photos" | "csv">("photos");
+  const [bulkPhotoItems, setBulkPhotoItems] = useState<BulkPhotoItem[]>([]);
+  const [bulkGlobalCat, setBulkGlobalCat] = useState<string>("minifigure");
+  const [bulkGlobalPrice, setBulkGlobalPrice] = useState<string>("9.50");
+  const [bulkGlobalStock, setBulkGlobalStock] = useState<string>("20");
+  const [bulkIsProcessingImages, setBulkIsProcessingImages] = useState<boolean>(false);
 
   // Parse CSV line handling quoted commas
   const parseCsvLine = (line: string): string[] => {
@@ -348,9 +372,192 @@ export default function AdminPage() {
   const handleOpenBulkUpload = () => {
     sounds.playPop();
     setBulkFileError("");
+    setBulkModalTab("photos");
     setBulkModalOpen(true);
-    if (!bulkRawText.trim()) {
-      handleLoadSampleBatch();
+  };
+
+  const handleOpenBulkPhotoUpload = () => {
+    sounds.playPop();
+    setBulkFileError("");
+    setBulkModalTab("photos");
+    setBulkModalOpen(true);
+  };
+
+  // Convert raw image filename like 'goku_super_saiyan.png' to 'Goku Super Saiyan'
+  const formatFilenameToName = (filename: string): string => {
+    const withoutExt = filename.replace(/\.[^/.]+$/, "");
+    const withSpaces = withoutExt.replace(/[_\-+]+/g, " ");
+    const cleaned = withSpaces.replace(/^(img|dsc|photo|pic|image|screenshot)\s*/i, "");
+    const words = cleaned.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return "New Product";
+    const titled = words
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+      .trim();
+    return titled || "New Product";
+  };
+
+  // Handle multi-image file selection (each photo = 1 new product)
+  const handleBulkPhotosSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setBulkIsProcessingImages(true);
+    sounds.playPop();
+
+    try {
+      const newItems: BulkPhotoItem[] = [];
+      const defaultCat = bulkGlobalCat || categories.find((c) => c.id !== "all")?.id || "minifigure";
+      const defaultPrice = bulkGlobalPrice || "9.50";
+      const defaultStock = bulkGlobalStock || "20";
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const resized = await resizeImageFile(file, 800, 0.82);
+        if (!resized) continue;
+
+        const cleanName = formatFilenameToName(file.name);
+        const randomCode = `SPK-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        newItems.push({
+          tempId: `bulk-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          code: randomCode,
+          name: cleanName,
+          nameKh: cleanName,
+          cat: defaultCat,
+          price: defaultPrice,
+          discount: "0",
+          stock: defaultStock,
+          pt: "5",
+          rarity: "Rare",
+          image: resized,
+          fileName: file.name,
+        });
+      }
+
+      setBulkPhotoItems((prev) => [...prev, ...newItems]);
+      sounds.playChime();
+      showToast(`Loaded ${newItems.length} photos! Edit names, prices & categories below.`);
+    } catch (err: any) {
+      alert("Failed to process images: " + (err?.message || "Error"));
+    } finally {
+      setBulkIsProcessingImages(false);
+      e.target.value = "";
+    }
+  };
+
+  // Replace photo for a single item in the bulk batch
+  const handleReplaceSinglePhoto = async (index: number, file: File) => {
+    const resized = await resizeImageFile(file, 800, 0.82);
+    if (!resized) return;
+    setBulkPhotoItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], image: resized };
+      }
+      return copy;
+    });
+    sounds.playChime();
+    showToast("Updated photo!");
+  };
+
+  // Batch apply category to all items
+  const handleApplyCatToAll = () => {
+    if (!bulkGlobalCat) return;
+    sounds.playPop();
+    setBulkPhotoItems((prev) => prev.map((item) => ({ ...item, cat: bulkGlobalCat })));
+    showToast(`Applied "${bulkGlobalCat}" category to all ${bulkPhotoItems.length} products!`);
+  };
+
+  // Batch apply price to all items
+  const handleApplyPriceToAll = () => {
+    const num = parseFloat(bulkGlobalPrice);
+    if (isNaN(num) || num <= 0) {
+      alert("Please enter a valid price (e.g. 9.50)");
+      return;
+    }
+    sounds.playPop();
+    setBulkPhotoItems((prev) => prev.map((item) => ({ ...item, price: bulkGlobalPrice })));
+    showToast(`Applied $${num.toFixed(2)} price to all ${bulkPhotoItems.length} products!`);
+  };
+
+  // Batch apply stock to all items
+  const handleApplyStockToAll = () => {
+    const num = parseInt(bulkGlobalStock, 10);
+    if (isNaN(num) || num < 0) {
+      alert("Please enter a valid stock quantity (e.g. 20)");
+      return;
+    }
+    sounds.playPop();
+    setBulkPhotoItems((prev) => prev.map((item) => ({ ...item, stock: bulkGlobalStock })));
+    showToast(`Applied stock ${num} to all ${bulkPhotoItems.length} products!`);
+  };
+
+  // Update single field on a bulk photo item
+  const updateBulkPhotoItem = (index: number, updates: Partial<BulkPhotoItem>) => {
+    setBulkPhotoItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], ...updates };
+      }
+      return copy;
+    });
+  };
+
+  // Remove one item from the batch
+  const removeBulkPhotoItem = (index: number) => {
+    sounds.playPop();
+    setBulkPhotoItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Save all bulk photo products into database
+  const handleSaveAllBulkPhotos = async () => {
+    if (bulkPhotoItems.length === 0) {
+      alert("No photos added. Please select photos first.");
+      return;
+    }
+
+    const emptyNameIndex = bulkPhotoItems.findIndex((item) => !item.name.trim());
+    if (emptyNameIndex !== -1) {
+      alert(`Product #${emptyNameIndex + 1} is missing a name. Please enter a name for all products.`);
+      return;
+    }
+
+    setBulkIsSubmitting(true);
+    try {
+      sounds.playChime();
+      const productsToCreate = bulkPhotoItems.map((item) => ({
+        code: item.code.trim() || `SPK-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: item.name.trim(),
+        nameKh: item.nameKh.trim() || item.name.trim(),
+        cat: item.cat || "minifigure",
+        price: parseFloat(item.price) || 5.0,
+        discount: parseInt(item.discount, 10) || 0,
+        stock: parseInt(item.stock, 10) || 10,
+        pt: parseInt(item.pt, 10) || 5,
+        image: item.image,
+        images: [item.image],
+        bio: "Fun & collectible toy crafted with high durable kid-safe ABS material.",
+        bioKh: "តុក្កតាប្រដាប់ក្មេងលេងគុណភាពខ្ពស់ សុវត្ថិភាពសម្រាប់កុមារ។",
+        rarity: item.rarity || "Rare",
+        rating: 5.0,
+        reviewsCount: 1,
+        featured: true,
+        isNew: true,
+        free_delivery: true,
+        ageRecommendation: "Ages 4+",
+        dimensions: "10cm x 8cm",
+      }));
+
+      await bulkAddProducts(productsToCreate, false);
+      sounds.playFanfare();
+      showToast(`🎉 Added ${productsToCreate.length} new products to storefront!`);
+      setBulkPhotoItems([]);
+      setBulkModalOpen(false);
+    } catch (err: any) {
+      alert("Failed to save products: " + (err?.message || "Unknown error"));
+    } finally {
+      setBulkIsSubmitting(false);
     }
   };
 
@@ -1726,22 +1933,24 @@ export default function AdminPage() {
                 <span>Assemble Bracelet Product 🔗</span>
               </button>
 
-              {/* Bulk Upload Button */}
+              {/* Choice 1: Bulk Photo Upload (1 Photo = 1 Product) */}
               <button
-                onClick={handleOpenBulkUpload}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center gap-1.5 hover:scale-102 active:scale-95 transition-all"
-                title="Bulk upload toys via CSV spreadsheet or JSON"
+                onClick={handleOpenBulkPhotoUpload}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                title="Select 10+ photos from your device to upload 10+ different products with batch editing"
               >
-                <Upload className="w-4 h-4" />
-                <span>Bulk Upload 📦</span>
+                <Images className="w-4 h-4 text-amber-300" />
+                <span>Bulk Photos Upload 📸</span>
               </button>
 
+              {/* Choice 2: Add Single Toy (One by One) */}
               <button
                 onClick={handleOpenAddProduct}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all"
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                title="Upload one product at a time with optional multi-photo gallery"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add New Toy</span>
+                <span>Add One by One</span>
               </button>
             </div>
           )}
@@ -3097,249 +3306,594 @@ export default function AdminPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl bg-white dark:bg-slate-900 border-2 border-blue-500/50 dark:border-blue-500/40 rounded-3xl p-5 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[92vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]"
+              className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border-2 border-indigo-500/50 dark:border-indigo-500/40 rounded-3xl p-4 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[92vh] flex flex-col pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
             >
               <button
                 onClick={() => setBulkModalOpen(false)}
-                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-md">
-                  <Upload className="w-5 h-5" />
+              {/* Modal Header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md">
+                  <Images className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white">
-                    Bulk Upload Products 📦
+                    Bulk Product Upload 📦
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Import multiple products at once via CSV spreadsheet file, JSON payload, or manual paste.
+                    Upload multiple products at once. Select multiple photos to create multiple products, or import via spreadsheet.
                   </p>
                 </div>
               </div>
 
-              {/* Action Toolbar: Template Download & Preset Samples & File Picker */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 my-4 p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={handleDownloadCsvTemplate}
-                    className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/80 flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
-                  >
-                    <span>📥 Download CSV Template</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleLoadSampleBatch}
-                    className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800/80 flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
-                  >
-                    <span>✨ Load 5 Sample Products</span>
-                  </button>
-
-                  <label className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload .CSV / .JSON</span>
-                    <input
-                      type="file"
-                      accept=".csv,.txt,.tsv,.json"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                {/* Import Mode Toggle */}
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">Mode:</span>
-                  <button
-                    type="button"
-                    onClick={() => setBulkReplaceMode(!bulkReplaceMode)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black font-fredoka transition-all border ${
-                      bulkReplaceMode
-                        ? "bg-rose-500 text-white border-rose-600 shadow-sm"
-                        : "bg-emerald-600 text-white border-emerald-700 shadow-sm"
-                    }`}
-                  >
-                    {bulkReplaceMode ? "⚠️ Overwrite Catalog" : "➕ Append / Update"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Text / Data Input Area */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">
-                    Paste CSV Data or JSON Array:
-                  </label>
-                  <span className="text-[10px] text-slate-400">
-                    Comma, tab, or semicolon delimited
-                  </span>
-                </div>
-                <textarea
-                  rows={4}
-                  value={bulkRawText}
-                  onChange={(e) => {
-                    setBulkRawText(e.target.value);
-                    parseBulkInput(e.target.value);
-                  }}
-                  placeholder="Code,Name,NameKh,Category,Price,Discount,Stock,Points,Image,Bio,BioKh..."
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-base sm:text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:border-blue-500 outline-none resize-y"
-                />
-              </div>
-
-              {bulkFileError && (
-                <div className="mt-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold">
-                  {bulkFileError}
-                </div>
-              )}
-
-              {/* Preview Table / Batch Status */}
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-black text-xs sm:text-sm font-fredoka text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Parsed Preview</span>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-mono font-black border border-blue-300 dark:border-blue-800">
-                      {bulkParsedProducts.length} items detected
+              {/* Mode Switcher Tabs */}
+              <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setBulkModalTab("photos")}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black font-fredoka flex items-center gap-2 transition-all cursor-pointer ${
+                    bulkModalTab === "photos"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Images className="w-4 h-4" />
+                  <span>Bulk Photos (1 Photo = 1 Product)</span>
+                  {bulkPhotoItems.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-white text-indigo-700 text-[10px] font-mono font-bold">
+                      {bulkPhotoItems.length}
                     </span>
-                    {bulkParsedProducts.filter((p) => p._valid).length > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-black border border-emerald-300 dark:border-emerald-800">
-                        {bulkParsedProducts.filter((p) => p._valid).length} valid
-                      </span>
-                    )}
-                  </h3>
-                  {bulkParsedProducts.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBulkRawText("");
-                        setBulkParsedProducts([]);
-                      }}
-                      className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors"
-                    >
-                      Clear Data
-                    </button>
                   )}
-                </div>
+                </button>
 
-                {bulkParsedProducts.length === 0 ? (
-                  <div className="py-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
-                    Paste CSV or JSON, or click &quot;Load 5 Sample Products&quot; above to preview items before importing.
-                  </div>
-                ) : (
-                  <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 divide-y divide-slate-200 dark:divide-slate-800">
-                    {bulkParsedProducts.map((p, idx) => (
-                      <div
-                        key={idx}
-                        className={`p-2.5 sm:p-3 flex items-center justify-between gap-3 text-xs ${
-                          p._valid ? "" : "bg-rose-50/60 dark:bg-rose-950/30"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="font-mono text-[10px] text-slate-400 w-5 flex-shrink-0">
-                            #{idx + 1}
-                          </span>
-                          <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex-shrink-0">
-                            {p.image ? (
-                              <Image
-                                src={p.image}
-                                alt={p.name || "Product"}
-                                fill
-                                className="object-cover"
-                                unoptimized={Boolean(p.image?.startsWith("data:"))}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs">📦</div>
-                            )}
+                <button
+                  type="button"
+                  onClick={() => setBulkModalTab("csv")}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black font-fredoka flex items-center gap-2 transition-all cursor-pointer ${
+                    bulkModalTab === "csv"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Spreadsheet (CSV / JSON)</span>
+                </button>
+              </div>
+
+              {/* TAB 1: MULTI-PHOTO UPLOAD (1 Photo = 1 Product) */}
+              {bulkModalTab === "photos" && (
+                <div className="flex-1 flex flex-col min-h-0">
+                  {bulkPhotoItems.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 rounded-3xl border-2 border-dashed border-indigo-400/60 dark:border-indigo-600/40 bg-indigo-50/40 dark:bg-indigo-950/20 text-center my-auto">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-4">
+                        <Images className="w-8 h-8 sm:w-10 sm:h-10 text-amber-300" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black font-fredoka text-slate-900 dark:text-white mb-2">
+                        Select 10+ Photos from Device (Each Photo = 1 Product)
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+                        Pick multiple photos from your computer or phone. Each photo automatically creates a separate product where you can edit its name, category, price, and stock before saving all at once!
+                      </p>
+
+                      <label className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-sm shadow-xl hover:scale-102 active:scale-95 transition-all cursor-pointer flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        <span>Select Multiple Photos (e.g. 10 photos)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleBulkPhotosSelected}
+                          className="hidden"
+                        />
+                      </label>
+                      {bulkIsProcessingImages && (
+                        <div className="flex items-center gap-2 mt-4 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Optimizing and loading photos...</span>
+                        </div>
+                      )}
+                      <p className="text-[11px] text-slate-400 mt-3">
+                        Tip: Hold Shift or Ctrl/Cmd to select 10, 20 or more pictures at once from your gallery.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col min-h-0">
+                      {/* Batch Apply Actions Toolbar */}
+                      <div className="p-3 sm:p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 mb-3 flex flex-col gap-2.5 flex-shrink-0">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black font-fredoka text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+                              Batch Actions ({bulkPhotoItems.length} Products):
+                            </span>
+                            <span className="text-[11px] text-slate-500 hidden sm:inline">
+                              Apply common settings to all products with 1 click:
+                            </span>
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-black text-slate-900 dark:text-white truncate font-fredoka">
-                                {p.name || "Untitled"}
-                              </span>
-                              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                                {p.code}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                              <span className="text-emerald-600 dark:text-emerald-400 font-black">
-                                ${p.price?.toFixed(2)}
-                              </span>
-                              <span>• {p.cat}</span>
-                              <span>• Stock: {p.stock}</span>
-                              <span>• +{p.pt} pt</span>
-                              {p.discount ? <span className="text-rose-500 font-bold">• {p.discount}% OFF</span> : null}
-                            </div>
-                            {p._errors && p._errors.length > 0 && (
-                              <p className="text-[10px] text-rose-600 font-bold mt-0.5">
-                                ⚠️ {p._errors.join(", ")}
-                              </p>
-                            )}
+                          <div className="flex items-center gap-2">
+                            <label className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-black font-fredoka text-xs border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95">
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ Add More Photos</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleBulkPhotosSelected}
+                                className="hidden"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm("Clear all draft products in this batch?")) {
+                                  setBulkPhotoItems([]);
+                                  sounds.playPop();
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                            >
+                              Clear All
+                            </button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {p._valid ? (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black text-[9px] border border-emerald-300 dark:border-emerald-800">
-                              ✓ Ready
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-black text-[9px] border border-rose-300 dark:border-rose-800">
-                              Invalid
-                            </span>
-                          )}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {/* Global Category */}
+                          <div className="flex gap-1.5 items-center bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                            <select
+                              value={bulkGlobalCat}
+                              onChange={(e) => setBulkGlobalCat(e.target.value)}
+                              className="flex-1 px-2 py-1 text-xs bg-transparent border-0 outline-none text-slate-800 dark:text-slate-200 font-bold cursor-pointer"
+                            >
+                              {categories.filter(c => c.id !== "all").map(c => (
+                                <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={handleApplyCatToAll}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black font-fredoka whitespace-nowrap active:scale-95 cursor-pointer"
+                            >
+                              Apply Cat
+                            </button>
+                          </div>
 
+                          {/* Global Price */}
+                          <div className="flex gap-1.5 items-center bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                            <span className="text-xs font-bold text-slate-400 pl-1.5">$</span>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={bulkGlobalPrice}
+                              onChange={(e) => setBulkGlobalPrice(e.target.value)}
+                              placeholder="Price for all"
+                              className="w-full px-1 py-1 text-xs bg-transparent border-0 outline-none text-slate-800 dark:text-slate-200 font-bold"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleApplyPriceToAll}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black font-fredoka whitespace-nowrap active:scale-95 cursor-pointer"
+                            >
+                              Apply Price
+                            </button>
+                          </div>
+
+                          {/* Global Stock */}
+                          <div className="flex gap-1.5 items-center bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                            <span className="text-xs font-bold text-slate-400 pl-1.5">Qty</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={bulkGlobalStock}
+                              onChange={(e) => setBulkGlobalStock(e.target.value)}
+                              placeholder="Stock for all"
+                              className="w-full px-1 py-1 text-xs bg-transparent border-0 outline-none text-slate-800 dark:text-slate-200 font-bold"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleApplyStockToAll}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black font-fredoka whitespace-nowrap active:scale-95 cursor-pointer"
+                            >
+                              Apply Stock
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Product Batch Cards List */}
+                      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0">
+                        {bulkPhotoItems.map((item, idx) => (
+                          <div
+                            key={item.tempId}
+                            className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center gap-3 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all"
+                          >
+                            {/* Photo Thumbnail */}
+                            <div className="relative group w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 flex-shrink-0 shadow-sm">
+                              <Image
+                                src={item.image}
+                                alt={item.name || "Product"}
+                                fill
+                                className="object-cover"
+                                unoptimized={Boolean(item.image?.startsWith("data:"))}
+                              />
+                              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-black/70 text-white font-mono text-[9px] font-bold">
+                                #{idx + 1}
+                              </span>
+                              <label
+                                title="Click to replace photo for this product"
+                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-bold cursor-pointer transition-opacity"
+                              >
+                                <Upload className="w-3.5 h-3.5 mb-0.5" />
+                                <span>Change</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      await handleReplaceSinglePhoto(idx, file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {/* Editable Fields */}
+                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2 w-full min-w-0">
+                              {/* SKU Code */}
+                              <div className="sm:col-span-2">
+                                <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                                  SKU Code
+                                </label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="text"
+                                    value={item.code}
+                                    onChange={(e) => updateBulkPhotoItem(idx, { code: e.target.value.toUpperCase() })}
+                                    className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Name EN */}
+                              <div className="sm:col-span-4">
+                                <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                                  Toy Name (English) *
+                                </label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={item.name}
+                                  onChange={(e) => updateBulkPhotoItem(idx, { name: e.target.value })}
+                                  placeholder="e.g. Cyber Mecha Titan"
+                                  className={`w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500 ${
+                                    !item.name.trim() ? "border-rose-400 dark:border-rose-600 bg-rose-50/50" : "border-slate-200 dark:border-slate-800"
+                                  }`}
+                                />
+                              </div>
+
+                              {/* Category */}
+                              <div className="sm:col-span-3">
+                                <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                                  Category *
+                                </label>
+                                <select
+                                  value={item.cat}
+                                  onChange={(e) => updateBulkPhotoItem(idx, { cat: e.target.value })}
+                                  className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500 cursor-pointer"
+                                >
+                                  {categories.filter(c => c.id !== "all").map(c => (
+                                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Price */}
+                              <div className="sm:col-span-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                                  Price ($)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  value={item.price}
+                                  onChange={(e) => updateBulkPhotoItem(idx, { price: e.target.value })}
+                                  className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 outline-none focus:border-indigo-500"
+                                />
+                              </div>
+
+                              {/* Stock */}
+                              <div className="sm:col-span-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                                  Stock
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={item.stock}
+                                  onChange={(e) => updateBulkPhotoItem(idx, { stock: e.target.value })}
+                                  className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white outline-none focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => removeBulkPhotoItem(idx)}
+                              className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-500 hover:text-rose-600 flex items-center justify-center transition-colors flex-shrink-0 self-end sm:self-center cursor-pointer"
+                              title="Remove this product from batch"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Bottom Action Footer for Multi-Photo */}
+                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span>
+                            <strong>{bulkPhotoItems.filter(p => p.name.trim()).length}</strong> of <strong>{bulkPhotoItems.length}</strong> products ready to publish
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                           <button
                             type="button"
-                            onClick={() => {
-                              sounds.playPop();
-                              setBulkParsedProducts((prev) => prev.filter((_, i) => i !== idx));
-                            }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
-                            title="Remove this item from batch"
+                            onClick={() => setBulkModalOpen(false)}
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveAllBulkPhotos}
+                            disabled={bulkIsSubmitting || bulkPhotoItems.length === 0 || bulkPhotoItems.some(p => !p.name.trim())}
+                            className="flex-1 sm:flex-none px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 hover:from-emerald-400 hover:to-green-500 disabled:opacity-50 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>
+                              {bulkIsSubmitting ? "Publishing..." : `Save & Publish All ${bulkPhotoItems.length} Products 🚀`}
+                            </span>
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Submit Action */}
-              <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-xs text-slate-500 text-center sm:text-left">
-                  {bulkParsedProducts.filter((p) => p._valid).length > 0
-                    ? `Ready to import ${bulkParsedProducts.filter((p) => p._valid).length} verified products into database.`
-                    : "Add or paste products above to proceed."}
-                </p>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => setBulkModalOpen(false)}
-                    className="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExecuteBulkUpload}
-                    disabled={bulkIsSubmitting || bulkParsedProducts.filter((p) => p._valid).length === 0}
-                    className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-black font-fredoka text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>
-                      {bulkIsSubmitting
-                        ? "Importing..."
-                        : `Import ${bulkParsedProducts.filter((p) => p._valid).length} Products`}
-                    </span>
-                  </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {/* TAB 2: SPREADSHEET (CSV / JSON) */}
+              {bulkModalTab === "csv" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                  {/* Action Toolbar: Template Download & Preset Samples & File Picker */}
+                  <div className="flex flex-wrap items-center justify-between gap-2.5 my-2 p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={handleDownloadCsvTemplate}
+                        className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/80 flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
+                      >
+                        <span>📥 Download CSV Template</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleLoadSampleBatch}
+                        className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800/80 flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
+                      >
+                        <span>✨ Load 5 Sample Products</span>
+                      </button>
+
+                      <label className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload .CSV / .JSON</span>
+                        <input
+                          type="file"
+                          accept=".csv,.txt,.tsv,.json"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Import Mode Toggle */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">Mode:</span>
+                      <button
+                        type="button"
+                        onClick={() => setBulkReplaceMode(!bulkReplaceMode)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black font-fredoka transition-all border ${
+                          bulkReplaceMode
+                            ? "bg-rose-500 text-white border-rose-600 shadow-sm"
+                            : "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                        }`}
+                      >
+                        {bulkReplaceMode ? "⚠️ Overwrite Catalog" : "➕ Append / Update"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Text / Data Input Area */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="font-bold text-slate-700 dark:text-slate-300">
+                        Paste CSV Data or JSON Array:
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        Comma, tab, or semicolon delimited
+                      </span>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={bulkRawText}
+                      onChange={(e) => {
+                        setBulkRawText(e.target.value);
+                        parseBulkInput(e.target.value);
+                      }}
+                      placeholder="Code,Name,NameKh,Category,Price,Discount,Stock,Points,Image,Bio,BioKh..."
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-base sm:text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:border-blue-500 outline-none resize-y"
+                    />
+                  </div>
+
+                  {bulkFileError && (
+                    <div className="mt-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                      {bulkFileError}
+                    </div>
+                  )}
+
+                  {/* Preview Table */}
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-black text-xs sm:text-sm font-fredoka text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Parsed Preview</span>
+                        <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-mono font-black border border-blue-300 dark:border-blue-800">
+                          {bulkParsedProducts.length} items detected
+                        </span>
+                        {bulkParsedProducts.filter((p) => p._valid).length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-black border border-emerald-300 dark:border-emerald-800">
+                            {bulkParsedProducts.filter((p) => p._valid).length} valid
+                          </span>
+                        )}
+                      </h3>
+                      {bulkParsedProducts.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBulkRawText("");
+                            setBulkParsedProducts([]);
+                          }}
+                          className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors"
+                        >
+                          Clear Data
+                        </button>
+                      )}
+                    </div>
+
+                    {bulkParsedProducts.length === 0 ? (
+                      <div className="py-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
+                        Paste CSV or JSON, or click &quot;Load 5 Sample Products&quot; above to preview items before importing.
+                      </div>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 divide-y divide-slate-200 dark:divide-slate-800">
+                        {bulkParsedProducts.map((p, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-2.5 sm:p-3 flex items-center justify-between gap-3 text-xs ${
+                              p._valid ? "" : "bg-rose-50/60 dark:bg-rose-950/30"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="font-mono text-[10px] text-slate-400 w-5 flex-shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex-shrink-0">
+                                {p.image ? (
+                                  <Image
+                                    src={p.image}
+                                    alt={p.name || "Product"}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized={Boolean(p.image?.startsWith("data:"))}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs">📦</div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-black text-slate-900 dark:text-white truncate font-fredoka">
+                                    {p.name || "Untitled"}
+                                  </span>
+                                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    {p.code}
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-black">
+                                    ${p.price?.toFixed(2)}
+                                  </span>
+                                  <span>• {p.cat}</span>
+                                  <span>• Stock: {p.stock}</span>
+                                  <span>• +{p.pt} pt</span>
+                                  {p.discount ? <span className="text-rose-500 font-bold">• {p.discount}% OFF</span> : null}
+                                </div>
+                                {p._errors && p._errors.length > 0 && (
+                                  <p className="text-[10px] text-rose-600 font-bold mt-0.5">
+                                    ⚠️ {p._errors.join(", ")}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {p._valid ? (
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black text-[9px] border border-emerald-300 dark:border-emerald-800">
+                                  ✓ Ready
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-black text-[9px] border border-rose-300 dark:border-rose-800">
+                                  Invalid
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  sounds.playPop();
+                                  setBulkParsedProducts((prev) => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                                title="Remove this item from batch"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CSV Submit Action */}
+                  <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p className="text-xs text-slate-500 text-center sm:text-left">
+                      {bulkParsedProducts.filter((p) => p._valid).length > 0
+                        ? `Ready to import ${bulkParsedProducts.filter((p) => p._valid).length} verified products into database.`
+                        : "Add or paste products above to proceed."}
+                    </p>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => setBulkModalOpen(false)}
+                        className="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExecuteBulkUpload}
+                        disabled={bulkIsSubmitting || bulkParsedProducts.filter((p) => p._valid).length === 0}
+                        className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-black font-fredoka text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>
+                          {bulkIsSubmitting
+                            ? "Importing..."
+                            : `Import ${bulkParsedProducts.filter((p) => p._valid).length} Products`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         )}
@@ -3367,9 +3921,29 @@ export default function AdminPage() {
               <h2 className="text-xl font-black font-fredoka text-slate-900 dark:text-white mb-1">
                 {editingProduct ? `Edit Toy: ${editingProduct.name}` : "Add New Toy to Storefront"}
               </h2>
-              <p className="text-xs text-slate-500 mb-5">
+              <p className="text-xs text-slate-500 mb-4">
                 Fill in toy details. Updates will immediately reflect on the live customer website.
               </p>
+
+              {!editingProduct && (
+                <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-5">
+                  <div className="flex-1 py-2 px-3 rounded-xl text-xs font-black font-fredoka flex items-center justify-center gap-1.5 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>One by One (Single Toy)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductModalOpen(false);
+                      handleOpenBulkPhotoUpload();
+                    }}
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-black font-fredoka flex items-center justify-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    <Images className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Bulk Upload (10+ Photos) 📸</span>
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSaveProduct} className="space-y-4">
                 {/* Product Code / SKU with Generator */}
