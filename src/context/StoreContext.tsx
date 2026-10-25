@@ -900,11 +900,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (replaceMode) {
           finalProducts = processed;
         } else {
-          const map = new Map(prev.map((p) => [p.code || p.id, p]));
-          for (const item of processed) {
-            map.set(item.code || item.id, item);
-          }
-          finalProducts = Array.from(map.values());
+          // Prepend new products so they appear immediately at the top of the store!
+          const newCodes = new Set(processed.map((p) => p.code || p.id));
+          const remainingPrev = prev.filter((p) => !newCodes.has(p.code || p.id));
+          finalProducts = [...processed, ...remainingPrev];
         }
         safeSetItem("somphea_products", JSON.stringify(finalProducts));
         neonSetKey("products", finalProducts);

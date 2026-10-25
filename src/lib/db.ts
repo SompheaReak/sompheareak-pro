@@ -334,12 +334,10 @@ export async function bulkAddProducts(
   if (replaceMode) {
     db.products = processedProducts;
   } else {
-    // Append or update existing by code/id
-    const existingMap = new Map(db.products.map((p) => [p.code || p.id, p]));
-    for (const prod of processedProducts) {
-      existingMap.set(prod.code || prod.id, prod);
-    }
-    db.products = Array.from(existingMap.values());
+    // Prepend new products so they appear immediately at the top
+    const newCodes = new Set(processedProducts.map((p) => p.code || p.id));
+    const remainingExisting = db.products.filter((p) => !newCodes.has(p.code || p.id));
+    db.products = [...processedProducts, ...remainingExisting];
   }
 
   saveDb(db);

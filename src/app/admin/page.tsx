@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -198,6 +198,7 @@ export default function AdminPage() {
   const [bulkIsSubmitting, setBulkIsSubmitting] = useState<boolean>(false);
 
   // Multi-Photo Bulk Upload State (1 Photo = 1 Product)
+  const bulkFileInputRef = useRef<HTMLInputElement>(null);
   const [bulkModalTab, setBulkModalTab] = useState<"photos" | "csv">("photos");
   const [bulkPhotoItems, setBulkPhotoItems] = useState<BulkPhotoItem[]>([]);
   const [bulkGlobalCat, setBulkGlobalCat] = useState<string>("minifigure");
@@ -376,11 +377,32 @@ export default function AdminPage() {
     setBulkModalOpen(true);
   };
 
+  // Direct trigger device file selector for bulk photos (1 Photo = 1 Product)
+  const handleTriggerBulkPhotoUpload = () => {
+    try {
+      if (bulkFileInputRef.current) {
+        bulkFileInputRef.current.value = "";
+        bulkFileInputRef.current.click();
+      } else {
+        setBulkModalTab("photos");
+        setBulkModalOpen(true);
+      }
+    } catch {
+      setBulkModalTab("photos");
+      setBulkModalOpen(true);
+    }
+    sounds.playPop();
+  };
+
   const handleOpenBulkPhotoUpload = () => {
     sounds.playPop();
-    setBulkFileError("");
-    setBulkModalTab("photos");
-    setBulkModalOpen(true);
+    if (bulkPhotoItems.length > 0) {
+      setBulkFileError("");
+      setBulkModalTab("photos");
+      setBulkModalOpen(true);
+    } else {
+      handleTriggerBulkPhotoUpload();
+    }
   };
 
   // Convert raw image filename like 'goku_super_saiyan.png' to 'Goku Super Saiyan'
@@ -404,6 +426,7 @@ export default function AdminPage() {
 
     setBulkIsProcessingImages(true);
     sounds.playPop();
+    showToast(`📸 Loading & optimizing ${files.length} photo(s)...`);
 
     try {
       const newItems: BulkPhotoItem[] = [];
@@ -413,7 +436,7 @@ export default function AdminPage() {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const resized = await resizeImageFile(file, 800, 0.82);
+        const resized = await resizeImageFile(file, 640, 0.75);
         if (!resized) continue;
 
         const cleanName = formatFilenameToName(file.name);
@@ -435,20 +458,27 @@ export default function AdminPage() {
         });
       }
 
+      if (newItems.length === 0) {
+        alert("Could not load photos. Please make sure you select valid image files.");
+        return;
+      }
+
       setBulkPhotoItems((prev) => [...prev, ...newItems]);
+      setBulkModalTab("photos");
+      setBulkModalOpen(true);
       sounds.playChime();
-      showToast(`Loaded ${newItems.length} photos! Edit names, prices & categories below.`);
+      showToast(`🎉 Loaded ${newItems.length} products! Ready to review and publish.`);
     } catch (err: any) {
       alert("Failed to process images: " + (err?.message || "Error"));
     } finally {
       setBulkIsProcessingImages(false);
-      e.target.value = "";
+      if (e.target) e.target.value = "";
     }
   };
 
   // Replace photo for a single item in the bulk batch
   const handleReplaceSinglePhoto = async (index: number, file: File) => {
-    const resized = await resizeImageFile(file, 800, 0.82);
+    const resized = await resizeImageFile(file, 640, 0.75);
     if (!resized) return;
     setBulkPhotoItems((prev) => {
       const copy = [...prev];
@@ -1006,9 +1036,14 @@ export default function AdminPage() {
     return matchesSearch && matchesCat;
   });
 
-  // Helper to downscale uploaded images to prevent exceeding localStorage quota
-  const resizeImageFile = (file: File, maxDim = 800, quality = 0.82): Promise<string> => {
+  // Helper to downscale uploaded images to prevent exceeding localStorage / payload quota
+  const resizeImageFile = (file: File, maxDim = 640, quality = 0.75): Promise<string> => {
     return new Promise((resolve) => {
+      if (!file || !file.type.startsWith("image/")) {
+        resolve("");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
@@ -1018,37 +1053,44 @@ export default function AdminPage() {
         }
         const img = new window.Image();
         img.onload = () => {
-          const nw = img.naturalWidth || img.width;
-          const nh = img.naturalHeight || img.height;
-          if (nw <= maxDim && nh <= maxDim) {
-            resolve(dataUrl);
-            return;
+          try {
+            const nw = img.naturalWidth || img.width || 640;
+            const nh = img.naturalHeight || img.height || 640;
+
+            let w = nw;
+            let h = nh;
+            if (w > h) {
+              if (w > maxDim) {
+                h = Math.max(1, Math.round((h * maxDim) / w));
+                w = maxDim;
+              }
+            } else {
+              if (h > maxDim) {
+                w = Math.max(1, Math.round((w * maxDim) / h));
+                h = maxDim;
+              }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, w);
+            canvas.height = Math.max(1, h);
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              resolve(dataUrl.length < 500000 ? dataUrl : "");
+              return;
+            }
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0, w, h);
+            const isPng = file.type === "image/png";
+            const resized = isPng ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg", quality);
+            resolve(resized || dataUrl);
+          } catch {
+            resolve(dataUrl.length < 500000 ? dataUrl : "");
           }
-          let w = nw;
-          let h = nh;
-          if (w > h) {
-            h = Math.max(1, Math.round((h * maxDim) / w));
-            w = maxDim;
-          } else {
-            w = Math.max(1, Math.round((w * maxDim) / h));
-            h = maxDim;
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            resolve(dataUrl);
-            return;
-          }
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, 0, 0, w, h);
-          const isPng = file.type === "image/png";
-          const resized = isPng ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg", quality);
-          resolve(resized);
         };
-        img.onerror = () => resolve(dataUrl);
+        img.onerror = () => {
+          resolve(dataUrl.length < 500000 ? dataUrl : "");
+        };
         img.src = dataUrl;
       };
       reader.onerror = () => resolve("");
@@ -1585,6 +1627,17 @@ export default function AdminPage() {
 
       {/* Dashboard Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-8">
+        {/* Hidden master input for bulk photo upload (1 Photo = 1 Product) */}
+        <input
+          ref={bulkFileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleBulkPhotosSelected}
+          className="fixed -top-[1000px] -left-[1000px] opacity-0 pointer-events-none w-1 h-1"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
         {/* Quick Analytics Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {/* Revenue */}
@@ -1912,16 +1965,34 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
               {/* Choice 1: Bulk Photo Upload (1 Photo = 1 Product) */}
               <button
-                onClick={handleOpenBulkPhotoUpload}
-                className="py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                type="button"
+                onClick={handleTriggerBulkPhotoUpload}
+                className="py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer ring-2 ring-indigo-400/50"
                 title="Select 10+ photos from your device to upload 10+ different products with batch editing"
               >
-                <Images className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-300" />
-                <span>Bulk Upload 📸</span>
+                <Images className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Bulk Upload (10+ Photos) 📸</span>
               </button>
+
+              {bulkPhotoItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    sounds.playPop();
+                    setBulkModalTab("photos");
+                    setBulkModalOpen(true);
+                  }}
+                  className="py-2.5 px-3 sm:px-3.5 rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all animate-bounce"
+                  title="You have unsaved bulk products. Click to review and publish!"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Resume Batch ({bulkPhotoItems.length})</span>
+                </button>
+              )}
 
               {/* Choice 2: Add Single Toy (One by One) */}
               <button
+                type="button"
                 onClick={handleOpenAddProduct}
                 className="py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center justify-center gap-1.5 sm:gap-2 hover:scale-102 active:scale-95 transition-all cursor-pointer"
                 title="Upload one product at a time with optional multi-photo gallery"
@@ -2206,6 +2277,36 @@ export default function AdminPage() {
                   </div>
                 );
               })}
+
+              {filteredProducts.length === 0 && (
+                <div className="col-span-full py-12 px-4 text-center rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 flex items-center justify-center mb-3">
+                    <Images className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No products found</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mt-1 mb-4">
+                    Upload your products using Bulk Upload (select 10+ photos from your device) or add them one by one.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleTriggerBulkPhotoUpload}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-black font-fredoka text-xs shadow-md flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+                    >
+                      <Images className="w-4 h-4 text-amber-300" />
+                      <span>Bulk Upload (10+ Photos) 📸</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddProduct}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-md flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add 1 by 1</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -3386,17 +3487,14 @@ export default function AdminPage() {
                         Pick multiple photos from your computer or phone. Each photo automatically creates a separate product where you can edit its name, category, price, and stock before saving all at once!
                       </p>
 
-                      <label className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-sm shadow-xl hover:scale-102 active:scale-95 transition-all cursor-pointer flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleTriggerBulkPhotoUpload}
+                        className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-sm shadow-xl hover:scale-102 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                      >
                         <Upload className="w-4 h-4" />
                         <span>Select Multiple Photos (e.g. 10 photos)</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleBulkPhotosSelected}
-                          className="hidden"
-                        />
-                      </label>
+                      </button>
                       {bulkIsProcessingImages && (
                         <div className="flex items-center gap-2 mt-4 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                           <RefreshCw className="w-4 h-4 animate-spin" />
@@ -3421,17 +3519,14 @@ export default function AdminPage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <label className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-black font-fredoka text-xs border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95">
+                            <button
+                              type="button"
+                              onClick={handleTriggerBulkPhotoUpload}
+                              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-300 font-black font-fredoka text-xs border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                            >
                               <Plus className="w-3.5 h-3.5" />
                               <span>+ Add More Photos</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={handleBulkPhotosSelected}
-                                className="hidden"
-                              />
-                            </label>
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
@@ -3531,10 +3626,10 @@ export default function AdminPage() {
                               </span>
                               <label
                                 title="Click to replace photo for this product"
-                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-bold cursor-pointer transition-opacity"
+                                className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/80 hover:bg-black text-white text-[9px] font-bold cursor-pointer flex items-center gap-0.5 shadow-md active:scale-95 transition-all"
                               >
-                                <Upload className="w-3.5 h-3.5 mb-0.5" />
-                                <span>Change</span>
+                                <Upload className="w-2.5 h-2.5 text-amber-300" />
+                                <span>Edit</span>
                                 <input
                                   type="file"
                                   accept="image/*"
