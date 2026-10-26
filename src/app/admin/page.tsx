@@ -86,6 +86,21 @@ export interface BulkCharmItem {
   fileName: string;
 }
 
+export interface BulkBraceletItem {
+  tempId: string;
+  code: string;
+  name: string;
+  nameKh: string;
+  finish: "silver" | "gold" | "rose" | "black";
+  charmsCount: number;
+  price: string;
+  stock: string;
+  image: string;
+  fileName: string;
+  bio?: string;
+  bioKh?: string;
+}
+
 const VALID_PASSWORDS = [
   "Sompheareakshop1234",
   "Sompheareak.com-Admin04/10/2026-Ming",
@@ -206,6 +221,16 @@ export default function AdminPage() {
   const [bulkCharmGlobalPrice, setBulkCharmGlobalPrice] = useState<string>("1.50");
   const [bulkCharmIsProcessing, setBulkCharmIsProcessing] = useState<boolean>(false);
   const [bulkCharmIsSubmitting, setBulkCharmIsSubmitting] = useState<boolean>(false);
+
+  // Bulk Bracelets Upload State (Multi-Photo = Multiple Bracelets, or Studio-designed bracelets queued)
+  const bulkBraceletFileInputRef = useRef<HTMLInputElement>(null);
+  const [bulkBraceletModalOpen, setBulkBraceletModalOpen] = useState<boolean>(false);
+  const [bulkBraceletItems, setBulkBraceletItems] = useState<BulkBraceletItem[]>([]);
+  const [bulkBraceletGlobalFinish, setBulkBraceletGlobalFinish] = useState<"silver" | "gold" | "rose" | "black">("silver");
+  const [bulkBraceletGlobalPrice, setBulkBraceletGlobalPrice] = useState<string>("12.00");
+  const [bulkBraceletGlobalStock, setBulkBraceletGlobalStock] = useState<string>("15");
+  const [bulkBraceletIsProcessing, setBulkBraceletIsProcessing] = useState<boolean>(false);
+  const [bulkBraceletIsSubmitting, setBulkBraceletIsSubmitting] = useState<boolean>(false);
 
   // Product Filters & Modal State
   const [productSearch, setProductSearch] = useState<string>("");
@@ -1598,6 +1623,218 @@ export default function AdminPage() {
   };
 
   // ==========================================
+  // BULK BRACELETS UPLOAD HANDLERS
+  // ==========================================
+  const handleTriggerBulkBraceletPhotoUpload = () => {
+    try {
+      if (bulkBraceletFileInputRef.current) {
+        bulkBraceletFileInputRef.current.value = "";
+        bulkBraceletFileInputRef.current.click();
+      } else {
+        setBulkBraceletModalOpen(true);
+      }
+    } catch {
+      setBulkBraceletModalOpen(true);
+    }
+    sounds.playPop();
+  };
+
+  const handleBulkBraceletsSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setBulkBraceletIsProcessing(true);
+    sounds.playPop();
+    showToast(`📸 Loading & optimizing ${files.length} bracelet photo(s)...`);
+
+    try {
+      const newItems: BulkBraceletItem[] = [];
+      const defaultFinish = bulkBraceletGlobalFinish || "silver";
+      const defaultPrice = bulkBraceletGlobalPrice || "12.00";
+      const defaultStock = bulkBraceletGlobalStock || "15";
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const resized = await resizeImageFile(file, 640, 0.8);
+        if (!resized) continue;
+
+        const cleanName = formatFilenameToName(file.name) || `Italian Bracelet #${i + 1}`;
+        const autoCode = `SPK-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        newItems.push({
+          tempId: `bulk-bracelet-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          code: autoCode,
+          name: cleanName,
+          nameKh: cleanName,
+          finish: defaultFinish,
+          charmsCount: 16,
+          price: defaultPrice,
+          stock: defaultStock,
+          image: resized,
+          fileName: file.name,
+          bio: `Authentic 316L waterproof stainless steel Italian modular charm bracelet (${defaultFinish.toUpperCase()} finish).`,
+          bioKh: `ខ្សែដៃម៉ូឌុលអ៊ីតាលី Inox 316L (${defaultFinish.toUpperCase()}) ប្រណិតមិនជ្រាបទឹក។`,
+        });
+      }
+
+      if (newItems.length === 0) {
+        alert("Could not load bracelet photos. Please ensure you select valid image files.");
+        return;
+      }
+
+      setBulkBraceletItems((prev) => [...prev, ...newItems]);
+      setBulkBraceletModalOpen(true);
+      sounds.playChime();
+      showToast(`🎉 Loaded ${newItems.length} bracelets! Ready to review and publish.`);
+    } catch (err: any) {
+      alert("Failed to process bracelet images: " + (err?.message || "Error"));
+    } finally {
+      setBulkBraceletIsProcessing(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleStudioAddToBulkBraceletBatch = (braceletData: {
+    name: string;
+    nameKh: string;
+    price: number;
+    bio: string;
+    image: string;
+    charms: { slotIndex: number; charm: Charm }[];
+    finish: "silver" | "gold" | "rose" | "black";
+    charmsCount: number;
+  }) => {
+    sounds.playFanfare();
+    const newItem: BulkBraceletItem = {
+      tempId: `bulk-bracelet-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      code: `SPK-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: braceletData.name,
+      nameKh: braceletData.nameKh,
+      finish: braceletData.finish,
+      charmsCount: braceletData.charmsCount,
+      price: braceletData.price.toFixed(2),
+      stock: bulkBraceletGlobalStock || "15",
+      image: braceletData.image,
+      fileName: "studio-workbench.png",
+      bio: braceletData.bio,
+      bioKh: `ខ្សែដៃម៉ូឌុលអ៊ីតាលី Inox 316L (${braceletData.finish.toUpperCase()}) ជាមួយ ${braceletData.charmsCount} ផ្លាកម៉ូឌុល`,
+    };
+    setBulkBraceletItems((prev) => [...prev, newItem]);
+    showToast(`Added designed bracelet to batch! (${bulkBraceletItems.length + 1} queued)`);
+  };
+
+  const handleReplaceSingleBraceletPhoto = async (index: number, file: File) => {
+    const resized = await resizeImageFile(file, 640, 0.8);
+    if (!resized) return;
+    setBulkBraceletItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], image: resized };
+      }
+      return copy;
+    });
+    sounds.playChime();
+    showToast("Updated bracelet photo!");
+  };
+
+  const handleApplyBraceletFinishToAll = () => {
+    if (!bulkBraceletGlobalFinish) return;
+    sounds.playPop();
+    setBulkBraceletItems((prev) => prev.map((item) => ({ ...item, finish: bulkBraceletGlobalFinish })));
+    showToast(`Applied "${bulkBraceletGlobalFinish.toUpperCase()}" finish to all ${bulkBraceletItems.length} bracelets!`);
+  };
+
+  const handleApplyBraceletPriceToAll = () => {
+    const num = parseFloat(bulkBraceletGlobalPrice);
+    if (isNaN(num) || num <= 0) {
+      alert("Please enter a valid price (e.g. 12.00)");
+      return;
+    }
+    sounds.playPop();
+    setBulkBraceletItems((prev) => prev.map((item) => ({ ...item, price: bulkBraceletGlobalPrice })));
+    showToast(`Applied $${num.toFixed(2)} price to all ${bulkBraceletItems.length} bracelets!`);
+  };
+
+  const handleApplyBraceletStockToAll = () => {
+    const num = parseInt(bulkBraceletGlobalStock, 10);
+    if (isNaN(num) || num < 0) {
+      alert("Please enter a valid stock quantity (e.g. 15)");
+      return;
+    }
+    sounds.playPop();
+    setBulkBraceletItems((prev) => prev.map((item) => ({ ...item, stock: bulkBraceletGlobalStock })));
+    showToast(`Applied stock ${num} to all ${bulkBraceletItems.length} bracelets!`);
+  };
+
+  const updateBulkBraceletItem = (index: number, updates: Partial<BulkBraceletItem>) => {
+    setBulkBraceletItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], ...updates };
+      }
+      return copy;
+    });
+  };
+
+  const removeBulkBraceletItem = (index: number) => {
+    sounds.playPop();
+    setBulkBraceletItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveAllBulkBracelets = async () => {
+    if (bulkBraceletItems.length === 0) {
+      alert("No bracelets to save. Please select photos or queue bracelets from the studio first.");
+      return;
+    }
+
+    const emptyNameIndex = bulkBraceletItems.findIndex((item) => !item.name.trim());
+    if (emptyNameIndex !== -1) {
+      alert(`Bracelet #${emptyNameIndex + 1} is missing a name. Please enter a name for all bracelets.`);
+      return;
+    }
+
+    setBulkBraceletIsSubmitting(true);
+    try {
+      sounds.playChime();
+      const productsToCreate = bulkBraceletItems.map((item) => {
+        const finishUpper = item.finish.toUpperCase();
+        return {
+          code: item.code.trim() || `SPK-${Math.floor(1000 + Math.random() * 9000)}`,
+          name: item.name.trim(),
+          nameKh: item.nameKh.trim() || item.name.trim(),
+          cat: "bracelet",
+          price: parseFloat(item.price) || 12.0,
+          discount: 0,
+          stock: parseInt(item.stock, 10) || 15,
+          pt: 5,
+          image: item.image,
+          images: [item.image],
+          bio: item.bio || `Authentic 316L waterproof stainless steel Italian modular charm bracelet (${finishUpper} finish).`,
+          bioKh: item.bioKh || `ខ្សែដៃម៉ូឌុលអ៊ីតាលី Inox 316L (${finishUpper}) ប្រណិតមិនជ្រាបទឹក។`,
+          rarity: "Rare" as ToyRarity,
+          rating: 5.0,
+          reviewsCount: 1,
+          featured: true,
+          isNew: true,
+          free_delivery: true,
+          ageRecommendation: "Ages 6+",
+          dimensions: `${item.charmsCount || 16} links (modular)`,
+        };
+      });
+
+      await bulkAddProducts(productsToCreate as any, false);
+      sounds.playFanfare();
+      showToast(`🎉 Published ${productsToCreate.length} new Italian bracelets to store!`);
+      setBulkBraceletItems([]);
+      setBulkBraceletModalOpen(false);
+    } catch (err: any) {
+      alert("Failed to save bracelets: " + (err?.message || "Unknown error"));
+    } finally {
+      setBulkBraceletIsSubmitting(false);
+    }
+  };
+
+  // ==========================================
   // CATEGORY BENTO BOXES HANDLERS
   // ==========================================
   const handleOpenAddBox = () => {
@@ -1935,6 +2172,17 @@ export default function AdminPage() {
           accept="image/*"
           multiple
           onChange={handleBulkCharmsSelected}
+          className="fixed -top-[1000px] -left-[1000px] opacity-0 pointer-events-none w-1 h-1"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        {/* Hidden master input for bulk bracelet photo upload (1 Photo = 1 Bracelet) */}
+        <input
+          ref={bulkBraceletFileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleBulkBraceletsSelected}
           className="fixed -top-[1000px] -left-[1000px] opacity-0 pointer-events-none w-1 h-1"
           tabIndex={-1}
           aria-hidden="true"
@@ -2336,6 +2584,31 @@ export default function AdminPage() {
 
           {activeTab === "bracelet_studio" && (
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTriggerBulkBraceletPhotoUpload}
+                className="py-2.5 px-3.5 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-500 hover:to-rose-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md shadow-rose-500/20 flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer ring-2 ring-rose-400/50"
+                title="Select 10+ bracelet photos from your device to upload multiple Italian bracelets at once"
+              >
+                <Package className="w-4 h-4 text-amber-200 animate-pulse" />
+                <span>Multi Bulk Upload Bracelets (10+) 📸</span>
+              </button>
+
+              {bulkBraceletItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    sounds.playPop();
+                    setBulkBraceletModalOpen(true);
+                  }}
+                  className="py-2.5 px-3 sm:px-3.5 rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all animate-bounce cursor-pointer"
+                  title="You have unsaved bulk bracelets. Click to review and publish!"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Resume Bracelet Batch ({bulkBraceletItems.length})</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={handleTriggerBulkCharmPhotoUpload}
@@ -3301,6 +3574,31 @@ export default function AdminPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
+                  onClick={handleTriggerBulkBraceletPhotoUpload}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-500 hover:to-rose-500 text-white font-black font-fredoka text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer ring-2 ring-rose-400/50"
+                  title="Upload 10+ bracelet photos or manage batch at once"
+                >
+                  <Package className="w-4 h-4 text-amber-200" />
+                  <span>Multi Bulk Upload Bracelets (10+) 📸</span>
+                </button>
+
+                {bulkBraceletItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sounds.playPop();
+                      setBulkBraceletModalOpen(true);
+                    }}
+                    className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black font-fredoka text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all animate-bounce cursor-pointer"
+                    title="You have unsaved bulk bracelets. Click to review and publish!"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Resume Bracelet Batch ({bulkBraceletItems.length})</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
                   onClick={handleTriggerBulkCharmPhotoUpload}
                   className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                 >
@@ -3335,6 +3633,9 @@ export default function AdminPage() {
                 onAddAsProduct={handleStudioAddAsProduct}
                 onOpenAddCharmModal={handleOpenAddCharm}
                 onOpenBulkCharmModal={handleTriggerBulkCharmPhotoUpload}
+                onOpenBulkBraceletModal={handleTriggerBulkBraceletPhotoUpload}
+                onAddToBulkBatch={handleStudioAddToBulkBraceletBatch}
+                bulkBraceletBatchCount={bulkBraceletItems.length}
               />
             </div>
           </div>
@@ -5256,6 +5557,347 @@ export default function AdminPage() {
                         <>
                           <Sparkles className="w-4 h-4 text-amber-300" />
                           <span>Publish All ({bulkCharmItems.length}) Charms to Studio ✨</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ==================================================== */}
+      {/* MODAL: BULK UPLOAD ITALY BRACELETS (10+ PHOTOS/STUDIO)*/}
+      {/* ==================================================== */}
+      <AnimatePresence>
+        {bulkBraceletModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border-2 border-rose-500/50 dark:border-rose-500/40 rounded-3xl p-4 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[92vh] flex flex-col pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
+            >
+              <button
+                onClick={() => setBulkBraceletModalOpen(false)}
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors z-10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-600 via-rose-600 to-amber-600 text-white flex items-center justify-center shadow-md">
+                  <Package className="w-5 h-5 text-amber-200" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+                    Multi Bulk Bracelet Upload 🔗 (Italian Modular Studio)
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Upload 10+ bracelet photos from your device at once, or queue designed bracelets from the Studio workbench. Batch configure finish, price, and stock before publishing to the storefront.
+                  </p>
+                </div>
+              </div>
+
+              {/* Empty state if 0 items */}
+              {bulkBraceletItems.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-950/50">
+                  <div className="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 shadow-inner">
+                    <Package className="w-8 h-8 text-rose-500" />
+                  </div>
+                  <h3 className="text-lg font-black font-fredoka text-slate-800 dark:text-slate-200 mb-1">
+                    No Bracelet Photos or Queued Designs Yet
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+                    Pick 10, 20 or more bracelet photos from your phone or PC, or design custom charm mixes in the Studio workbench and click &quot;+ Queue to Batch&quot;!
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleTriggerBulkBraceletPhotoUpload}
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-500 hover:to-rose-500 text-white font-black font-fredoka text-sm shadow-xl hover:scale-102 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>Select Multiple Bracelet Photos (10+) 📸</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBulkBraceletModalOpen(false);
+                        setActiveTab("bracelet_studio");
+                      }}
+                      className="px-5 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-black font-fredoka text-sm border border-slate-200 dark:border-slate-700 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Design in Studio Workbench</span>
+                    </button>
+                  </div>
+                  {bulkBraceletIsProcessing && (
+                    <div className="flex items-center gap-2 mt-4 text-xs font-bold text-rose-600 dark:text-rose-400">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Optimizing and sizing bracelet photos...</span>
+                    </div>
+                  )}
+                  <p className="text-[11px] text-slate-400 mt-3">
+                    Tip: Hold Shift or Ctrl/Cmd to select multiple images from your photo gallery.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Batch Apply Actions Toolbar */}
+                  <div className="p-3 sm:p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 mb-3 flex flex-col gap-2.5 flex-shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-black font-fredoka shadow-xs">
+                          {bulkBraceletItems.length} Bracelets in Batch
+                        </span>
+                        <span className="text-xs text-rose-800 dark:text-rose-300 font-bold hidden sm:inline">
+                          Batch Controls (Quickly set finish, price & stock for all):
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleTriggerBulkBraceletPhotoUpload}
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 text-rose-700 dark:text-rose-300 font-black font-fredoka text-xs border border-rose-200 dark:border-rose-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Add More Photos</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Clear all draft bracelets in this batch?")) {
+                              setBulkBraceletItems([]);
+                              sounds.playPop();
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Batch Inputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-rose-200/60 dark:border-rose-900/40">
+                      {/* Set finish for all */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          Finish:
+                        </span>
+                        <select
+                          value={bulkBraceletGlobalFinish}
+                          onChange={(e) => setBulkBraceletGlobalFinish(e.target.value as any)}
+                          className="flex-1 px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 text-slate-800 dark:text-slate-200 outline-none"
+                        >
+                          <option value="silver">Silver Steel</option>
+                          <option value="gold">Gold Plated</option>
+                          <option value="rose">Rose Gold</option>
+                          <option value="black">Obsidian Black</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={handleApplyBraceletFinishToAll}
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black font-fredoka active:scale-95 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          Apply All
+                        </button>
+                      </div>
+
+                      {/* Set price for all */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          Price ($):
+                        </span>
+                        <input
+                          type="number"
+                          step="0.50"
+                          min="1"
+                          value={bulkBraceletGlobalPrice}
+                          onChange={(e) => setBulkBraceletGlobalPrice(e.target.value)}
+                          placeholder="12.00"
+                          className="w-20 px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 text-slate-800 dark:text-slate-200 outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyBraceletPriceToAll}
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black font-fredoka active:scale-95 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          Apply All
+                        </button>
+                      </div>
+
+                      {/* Set stock for all */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          Stock:
+                        </span>
+                        <input
+                          type="number"
+                          step="1"
+                          min="1"
+                          value={bulkBraceletGlobalStock}
+                          onChange={(e) => setBulkBraceletGlobalStock(e.target.value)}
+                          placeholder="15"
+                          className="w-16 px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 text-slate-800 dark:text-slate-200 outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyBraceletStockToAll}
+                          className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black font-fredoka active:scale-95 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          Apply All
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Bracelets Grid */}
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-3 max-h-[50vh] sm:max-h-[55vh] scrollbar-thin">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {bulkBraceletItems.map((item, index) => (
+                        <div
+                          key={item.tempId}
+                          className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-rose-400 dark:hover:border-rose-700/60 transition-all flex gap-3 relative group"
+                        >
+                          {/* Left: Bracelet Preview & Replace Photo */}
+                          <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                            <div className="relative w-20 h-16 sm:w-24 sm:h-20 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 p-1 flex items-center justify-center overflow-hidden shadow-inner">
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-cover rounded-lg"
+                                unoptimized={item.image.startsWith("data:")}
+                              />
+                            </div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 font-mono font-bold text-slate-600 dark:text-slate-300">
+                              {item.charmsCount || 16} links
+                            </span>
+                            <label className="text-[10px] font-black text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-0.5">
+                              <span>Change</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleReplaceSingleBraceletPhoto(index, f);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Right: Editable Fields */}
+                          <div className="flex-1 min-w-0 space-y-2">
+                            {/* Row 1: Code & Remove Button */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  SKU:
+                                </span>
+                                <input
+                                  type="text"
+                                  value={item.code}
+                                  onChange={(e) => updateBulkBraceletItem(index, { code: e.target.value.toUpperCase() })}
+                                  placeholder="SPK-1001"
+                                  className="w-24 px-2 py-0.5 text-xs font-mono font-black uppercase rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-rose-600 dark:text-rose-400 outline-none"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeBulkBraceletItem(index)}
+                                className="w-7 h-7 rounded-lg text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 flex items-center justify-center transition-colors cursor-pointer"
+                                title="Remove bracelet from batch"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Row 2: Name */}
+                            <div>
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => updateBulkBraceletItem(index, { name: e.target.value, nameKh: e.target.value })}
+                                placeholder="Bracelet Name (e.g. Vintage Italian Steel Bracelet)"
+                                className="w-full px-2.5 py-1 text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-none focus:border-rose-500"
+                              />
+                            </div>
+
+                            {/* Row 3: Finish, Price & Stock */}
+                            <div className="grid grid-cols-3 gap-1.5">
+                              <div>
+                                <select
+                                  value={item.finish}
+                                  onChange={(e) => updateBulkBraceletItem(index, { finish: e.target.value as any })}
+                                  className="w-full px-1.5 py-1 text-[11px] rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none"
+                                >
+                                  <option value="silver">Silver</option>
+                                  <option value="gold">Gold</option>
+                                  <option value="rose">Rose</option>
+                                  <option value="black">Black</option>
+                                </select>
+                              </div>
+                              <div>
+                                <input
+                                  type="number"
+                                  step="0.50"
+                                  min="1"
+                                  value={item.price}
+                                  onChange={(e) => updateBulkBraceletItem(index, { price: e.target.value })}
+                                  placeholder="$12.00"
+                                  className="w-full px-1.5 py-1 text-[11px] font-mono rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-none"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="number"
+                                  step="1"
+                                  min="0"
+                                  value={item.stock}
+                                  onChange={(e) => updateBulkBraceletItem(index, { stock: e.target.value })}
+                                  placeholder="Stock: 15"
+                                  className="w-full px-1.5 py-1 text-[11px] font-mono rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Modal Bottom Footer */}
+                  <div className="pt-3 sm:pt-4 mt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setBulkBraceletModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Save as Draft & Close
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveAllBulkBracelets}
+                      disabled={bulkBraceletIsSubmitting || bulkBraceletItems.length === 0}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-500 hover:to-rose-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-lg shadow-rose-600/30 flex items-center gap-2 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {bulkBraceletIsSubmitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Publishing {bulkBraceletItems.length} Bracelets...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 text-amber-200" />
+                          <span>Publish All ({bulkBraceletItems.length}) Bracelets to Storefront ✨</span>
                         </>
                       )}
                     </button>

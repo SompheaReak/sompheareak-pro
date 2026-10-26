@@ -65,6 +65,18 @@ interface CustomBraceletStudioProps {
   }) => void;
   onOpenAddCharmModal?: () => void;
   onOpenBulkCharmModal?: () => void;
+  onOpenBulkBraceletModal?: () => void;
+  onAddToBulkBatch?: (braceletData: {
+    name: string;
+    nameKh: string;
+    price: number;
+    bio: string;
+    image: string;
+    charms: { slotIndex: number; charm: Charm }[];
+    finish: "silver" | "gold" | "rose" | "black";
+    charmsCount: number;
+  }) => void;
+  bulkBraceletBatchCount?: number;
 }
 
 export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
@@ -73,6 +85,9 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
   onAddAsProduct,
   onOpenAddCharmModal,
   onOpenBulkCharmModal,
+  onOpenBulkBraceletModal,
+  onAddToBulkBatch,
+  bulkBraceletBatchCount = 0,
 }) => {
   const { addCustomBraceletToCart, currency, t, language, charms, deleteCharm } = useStore();
 
@@ -593,7 +608,18 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
             <span>{language === "km" ? "✨ ត្បូងទាំងអស់" : "✨ All Charms"}</span>
           </h3>
           {isAdminMode && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {onOpenBulkBraceletModal && (
+                <button
+                  type="button"
+                  onClick={onOpenBulkBraceletModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-500 hover:to-rose-500 text-white font-black font-fredoka text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+                  title="Upload 10+ bracelet photos or manage batch at once"
+                >
+                  <Package className="w-3.5 h-3.5 text-amber-200" />
+                  <span>Bulk Upload Bracelets (10+) 🔗</span>
+                </button>
+              )}
               {onOpenBulkCharmModal && (
                 <button
                   type="button"
@@ -602,7 +628,7 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
                   title="Upload 10+ charm photos at once"
                 >
                   <Images className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Bulk Upload (10+) 📸</span>
+                  <span>Bulk Upload Charms (10+) 📸</span>
                 </button>
               )}
               {onOpenAddCharmModal && (
@@ -708,6 +734,34 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
             <Shuffle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </button>
 
+          {/* Admin Queue to Multi Bulk Batch */}
+          {isAdminMode && onAddToBulkBatch && (
+            <button
+              type="button"
+              onClick={() => {
+                if (slots.length === 0) {
+                  alert("Please add at least 1 charm to queue this bracelet to batch!");
+                  return;
+                }
+                onAddToBulkBatch({
+                  name: `Italian Bracelet (${finish.toUpperCase()} · ${activeCharmsCount} Charms)`,
+                  nameKh: `ខ្សែដៃអ៊ីតាលី (${finish.toUpperCase()} · ${activeCharmsCount} ផ្លាក)`,
+                  price: totalPriceUsd,
+                  bio: `Hand-crafted Italian Modular Bracelet (${finish.toUpperCase()} finish) with ${activeCharmsCount} charms.`,
+                  image: slots[0]?.plateImage || slots[0]?.image || "/assets/links_tight/link_plain.webp",
+                  charms: slots.map((c, idx) => ({ slotIndex: idx, charm: c })),
+                  finish,
+                  charmsCount: activeCharmsCount,
+                });
+              }}
+              className="px-3.5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black font-fredoka text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/30 transition-all cursor-pointer whitespace-nowrap"
+              title="Queue this designed bracelet to multi bulk upload batch"
+            >
+              <Package className="w-4 h-4 text-amber-300" />
+              <span>+ Queue to Batch {bulkBraceletBatchCount > 0 ? `(${bulkBraceletBatchCount})` : ""}</span>
+            </button>
+          )}
+
           {/* Wide CTA button */}
           <button
             type="button"
@@ -728,8 +782,17 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
             }}
             className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black font-fredoka text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
           >
-            <ShoppingCart className="w-4 h-4" />
-            <span>{language === "km" ? "បញ្ជាទិញឥឡូវនេះ" : "Order Now"}</span>
+            {isAdminMode ? (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Publish As Single Product</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                <span>{language === "km" ? "បញ្ជាទិញឥឡូវនេះ" : "Order Now"}</span>
+              </>
+            )}
             {activeCharmsCount > 0 && (
               <span className="text-xs opacity-90 font-mono">({formatPrice(totalPriceUsd, currency)})</span>
             )}
