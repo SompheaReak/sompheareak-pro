@@ -74,6 +74,12 @@ export interface BulkPhotoItem {
   fileName: string;
 }
 
+const VALID_PASSWORDS = [
+  "Sompheareakshop1234",
+  "Sompheareak.com-Admin04/10/2026-Ming",
+  process.env.NEXT_PUBLIC_ADMIN_PIN,
+].filter(Boolean) as string[];
+
 const ADMIN_PASSWORD = "Sompheareakshop1234";
 
 const PRESET_TOY_IMAGES = [
@@ -752,7 +758,7 @@ export default function AdminPage() {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
+    if (passwordInput.trim() === ADMIN_PASSWORD || VALID_PASSWORDS.includes(passwordInput.trim())) {
       sounds.playFanfare();
       sessionStorage.setItem("somphea_admin_auth", "true");
       setIsAuthenticated(true);
