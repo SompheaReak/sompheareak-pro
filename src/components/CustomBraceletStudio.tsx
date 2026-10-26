@@ -416,11 +416,11 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
   return (
     <section id="custom-bracelet-studio" className="py-4 sm:py-8 px-3 sm:px-6 max-w-5xl mx-auto pb-32">
       {/* ==================================================== */}
-      {/* TOP WORKBENCH CARD                                  */}
+      {/* TOP WORKBENCH CARD (STICKY TOP FOR EASY ASSEMBLY)   */}
       {/* ==================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
+      <div className="sticky top-20 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg space-y-3 transition-all">
         {/* Row 1: Charms Count, Total Price & Clear Button */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5 sm:pb-3">
           {/* Charms Count */}
           <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold font-fredoka text-slate-800 dark:text-slate-200">
             <span>{language === "km" ? "ចំនួនស្រទាប់" : "Charms"} :</span>
@@ -432,7 +432,7 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             {/* Total Price */}
             <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold font-fredoka text-slate-800 dark:text-slate-200">
               <span>{language === "km" ? "តម្លៃ" : "Price"} :</span>
@@ -455,23 +455,23 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
         </div>
 
         {/* Extended View Box with Integrated Minimum Progress Bar */}
-        <div className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 min-h-[190px] sm:min-h-[220px] flex flex-col justify-between p-3.5 sm:p-5 relative overflow-hidden transition-all">
+        <div className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 min-h-[155px] sm:min-h-[210px] flex flex-col justify-between p-3 sm:p-5 relative overflow-hidden transition-all">
           {/* Main Ribbon / Canvas Area */}
-          <div className="flex-1 flex items-center justify-center w-full py-4 sm:py-6">
+          <div className="flex-1 flex items-center justify-center w-full py-2.5 sm:py-5">
             {activeCharmsCount === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center space-y-1.5 select-none">
-                <Layers className="w-9 h-9 text-slate-400 animate-pulse" />
-                <span className="text-sm sm:text-base font-black font-fredoka text-slate-700 dark:text-slate-300">
+              <div className="flex flex-col items-center justify-center text-center space-y-1.5 select-none py-1">
+                <Layers className="w-8 h-8 sm:w-9 sm:h-9 text-slate-400 animate-pulse" />
+                <span className="text-xs sm:text-base font-black font-fredoka text-slate-700 dark:text-slate-300">
                   {language === "km" ? "ចាប់ផ្តើមរៀបចំ" : "Start Assembling"}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-[11px] sm:text-xs text-slate-400">
                   {language === "km" ? "(ចុចលើត្បូងខាងក្រោមដើម្បីបន្ថែម)" : "(Tap charms below to connect)"}
                 </span>
               </div>
             ) : (
               <div
                 ref={ribbonScrollRef}
-                className="w-full flex items-center overflow-x-auto py-2 px-1 scrollbar-thin touch-pan-x [-webkit-overflow-scrolling:touch]"
+                className="w-full flex items-center overflow-x-auto py-1.5 sm:py-2 px-1 scrollbar-thin touch-pan-x [-webkit-overflow-scrolling:touch]"
               >
                 <div className="flex items-center min-w-max mx-auto py-1 gap-1">
                   {slots.map((charm, idx) => (
@@ -495,7 +495,7 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
           </div>
 
           {/* Integrated Minimum Progress Bar inside View Box */}
-          <div className="w-full pt-3 mt-auto border-t border-slate-200/80 dark:border-slate-800/80 space-y-1.5">
+          <div className="w-full pt-2.5 sm:pt-3 mt-auto border-t border-slate-200/80 dark:border-slate-800/80 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5 font-fredoka">
                 <span>{language === "km" ? "អប្បបរមា ១៦ គ្រាប់ (16 Charms Minimum)" : "16 Charms Minimum"}</span>
@@ -519,16 +519,16 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
         </div>
 
         {/* Row 4: Code Share & Import controls */}
-        <div className="space-y-2 pt-1">
+        <div className="space-y-2 pt-0.5 sm:pt-1">
           {/* Row 4a: Current Code Read-only Display + COPY */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs sm:text-sm font-mono font-bold text-slate-700 dark:text-slate-200 truncate select-all border border-slate-200 dark:border-slate-700 text-center">
+            <div className="flex-1 px-3 py-1.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs sm:text-sm font-mono font-bold text-slate-700 dark:text-slate-200 truncate select-all border border-slate-200 dark:border-slate-700 text-center">
               {currentBuildCode || "XXXX - XXXX"}
             </div>
             <button
               type="button"
               onClick={handleCopyBraceletCode}
-              className="px-4 sm:px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-black font-fredoka flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0 cursor-pointer shadow-sm"
+              className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-black font-fredoka flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0 cursor-pointer shadow-sm"
               title="Copy code"
             >
               {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -552,13 +552,13 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
                 }
               }}
               placeholder={language === "km" ? "ដាក់លេខកូដដើម្បីទាញយក . . ." : "Enter code to import . . ."}
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-500 font-mono"
+              className="flex-1 px-3 py-1.5 sm:py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-500 font-mono"
             />
             <button
               type="button"
               onClick={handleApplyFriendCode}
               disabled={!friendCodeInput.trim()}
-              className="px-4 sm:px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-black font-fredoka flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0 cursor-pointer shadow-sm"
+              className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-black font-fredoka flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0 cursor-pointer shadow-sm"
             >
               <span>{language === "km" ? "ដាក់កូដ" : "Import"}</span>
             </button>
@@ -566,14 +566,14 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
 
           {/* Input Error Feedback */}
           {inputError && (
-            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2 shadow-xs">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/80 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2 shadow-xs">
               <Info className="w-3.5 h-3.5 flex-shrink-0 text-rose-500" />
               <span>{inputError}</span>
             </div>
           )}
 
           {/* Subtitle */}
-          <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 pt-0.5">
+          <p className="text-[10px] sm:text-[11px] text-center text-slate-400 dark:text-slate-500 pt-0.5 hidden sm:block">
             {language === "km"
               ? "(ប្រព័ន្ធនឹងទាញយកខ្សែកដៃដែលបានរក្សាទុក... អាចចែករំលែកទៅមិត្តភក្តិបាន)"
               : "(Import saved bracelet style... or share code with friends)"}
