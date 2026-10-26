@@ -99,7 +99,8 @@ export const CartDrawer: React.FC = () => {
                     sounds.playPop();
                     setCartDrawerOpen(false);
                   }}
-                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+                  className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-90 cursor-pointer"
+                  aria-label="Close Cart"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -194,28 +195,42 @@ export const CartDrawer: React.FC = () => {
                       </div>
 
                       {/* Quantity Controls & Delete */}
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="flex flex-col items-end gap-2.5">
                         <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                          onClick={() => {
+                            sounds.playPop();
+                            removeFromCart(item.id);
+                          }}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/40 transition-all active:scale-90 cursor-pointer"
                           title="Remove item"
+                          aria-label="Remove item"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
 
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
+                        <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5 shadow-2xs">
                           <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="w-5 h-5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            onClick={() => {
+                              sounds.playPop();
+                              updateQuantity(item.id, -1);
+                            }}
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 active:scale-90 transition-all cursor-pointer"
+                            aria-label="Decrease quantity"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white px-1">{item.quantity}</span>
+                          <span className="min-w-[28px] text-center text-xs sm:text-sm font-black font-fredoka text-slate-900 dark:text-white px-1">
+                            {item.quantity}
+                          </span>
                           <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="w-5 h-5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            onClick={() => {
+                              sounds.playPop();
+                              updateQuantity(item.id, 1);
+                            }}
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 active:scale-90 transition-all cursor-pointer"
+                            aria-label="Increase quantity"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -230,14 +245,14 @@ export const CartDrawer: React.FC = () => {
                   {/* Voucher Input */}
                   <div className="mb-4">
                     {activeVoucher ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-100 dark:bg-toy-green/10 border border-emerald-300 dark:border-toy-green/30 text-xs">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-100 dark:bg-toy-green/10 border border-emerald-300 dark:border-toy-green/30 text-xs">
                         <div className="flex items-center gap-1.5 text-emerald-800 dark:text-toy-green font-bold">
-                          <Tag className="w-3.5 h-3.5" />
+                          <Tag className="w-4 h-4" />
                           <span>{activeVoucher.description}</span>
                         </div>
                         <button
                           onClick={removeVoucher}
-                          className="text-rose-600 dark:text-toy-pink hover:underline font-bold text-[11px]"
+                          className="h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-toy-pink font-bold text-xs border border-rose-200 dark:border-rose-900/40 transition-all active:scale-95 cursor-pointer"
                         >
                           Remove
                         </button>
@@ -249,17 +264,17 @@ export const CartDrawer: React.FC = () => {
                           value={voucherInput}
                           onChange={(e) => setVoucherInput(e.target.value)}
                           placeholder="Voucher code (e.g. VIP10OFF)"
-                          className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none uppercase"
+                          className="flex-1 h-11 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none uppercase font-mono font-bold focus:border-emerald-500"
                         />
                         <button
                           type="submit"
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-xs font-black text-white font-fredoka shadow-sm transition-all"
+                          className="h-11 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-xs font-black text-white font-fredoka shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
                         >
                           {t("applyVoucher")}
                         </button>
                       </form>
                     )}
-                    {voucherError && <p className="text-[11px] text-rose-600 dark:text-toy-pink mt-1">{voucherError}</p>}
+                    {voucherError && <p className="text-[11px] text-rose-600 dark:text-toy-pink mt-1 font-bold">{voucherError}</p>}
                   </div>
 
                   {/* Summary Breakdown */}

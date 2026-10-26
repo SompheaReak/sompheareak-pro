@@ -115,28 +115,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* Left / Right Navigation Buttons (Side-way scroll) */}
+        {/* Left / Right Navigation Buttons (Side-way scroll) - Enhanced Fitts's Law Touch Targets */}
         {productImages.length > 1 && (
           <>
             <button
               type="button"
               onClick={handlePrevImage}
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover/img:opacity-100 transition-opacity border border-slate-200 dark:border-slate-700"
-              title="Previous photo (Scroll left)"
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 dark:bg-slate-900/95 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center opacity-90 sm:opacity-0 group-hover/img:opacity-100 transition-opacity border border-slate-200 dark:border-slate-700 active:scale-90"
+              title="Previous photo"
+              aria-label="Previous photo"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               type="button"
               onClick={handleNextImage}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover/img:opacity-100 transition-opacity border border-slate-200 dark:border-slate-700"
-              title="Next photo (Scroll right)"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 dark:bg-slate-900/95 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center opacity-90 sm:opacity-0 group-hover/img:opacity-100 transition-opacity border border-slate-200 dark:border-slate-700 active:scale-90"
+              title="Next photo"
+              aria-label="Next photo"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Dot Pagination indicators */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/40 backdrop-blur-xs">
+            {/* Dot Pagination indicators with generous tap target padding */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-xs">
               {productImages.map((_, dotIdx) => (
                 <button
                   key={dotIdx}
@@ -146,12 +148,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     sounds.playPop();
                     setActiveImageIdx(dotIdx);
                   }}
-                  className={`h-1.5 rounded-full transition-all ${
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
                     dotIdx === activeImageIdx
-                      ? "bg-white w-3.5 scale-105"
-                      : "bg-white/50 hover:bg-white/80 w-1.5"
+                      ? "bg-white w-4 scale-105"
+                      : "bg-white/50 hover:bg-white/80 w-2"
                   }`}
                   title={`View photo ${dotIdx + 1}`}
+                  aria-label={`View photo ${dotIdx + 1}`}
                 />
               ))}
             </div>
@@ -216,12 +219,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-            {/* Add to Cart button */}
+            {/* Add to Cart button - Optimized Fitts's Law Target Size */}
             <button
               onClick={() => addToCart(product, 1)}
-              className="py-1.5 px-2 sm:py-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-black text-white bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:from-emerald-400 hover:to-green-500 active:scale-95 transition-all shadow-toy-green-glow border-b-2 border-emerald-900 flex items-center gap-1 sm:gap-1.5 font-fredoka text-[10px] sm:text-xs"
+              className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl sm:rounded-2xl font-black text-white bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:from-emerald-400 hover:to-green-500 active:scale-95 transition-all shadow-toy-green-glow border-b-2 border-emerald-900 flex items-center justify-center gap-1.5 font-fredoka text-xs sm:text-xs select-none cursor-pointer"
+              title={t("addToCart")}
+              aria-label={t("addToCart")}
             >
-              <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span className="hidden sm:inline">{t("addToCart")}</span>
               <span className="sm:hidden">+Cart</span>
             </button>

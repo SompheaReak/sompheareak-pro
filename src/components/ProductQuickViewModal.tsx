@@ -52,7 +52,8 @@ export const ProductQuickViewModal: React.FC = () => {
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+            className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-90 cursor-pointer shadow-sm"
+            aria-label="Close product view"
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,10 +103,11 @@ export const ProductQuickViewModal: React.FC = () => {
                         prev > 0 ? prev - 1 : productImages.length - 1
                       );
                     }}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-900/95 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-90 cursor-pointer"
                     title="Previous photo (Scroll left)"
+                    aria-label="Previous photo"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
                     type="button"
@@ -116,10 +118,11 @@ export const ProductQuickViewModal: React.FC = () => {
                         prev < productImages.length - 1 ? prev + 1 : 0
                       );
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-md flex items-center justify-center border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-900/95 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white shadow-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-90 cursor-pointer"
                     title="Next photo (Scroll right)"
+                    aria-label="Next photo"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </>
               )}
@@ -211,25 +214,29 @@ export const ProductQuickViewModal: React.FC = () => {
             <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Quantity:</span>
-                <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
                   <button
                     onClick={() => {
                       sounds.playPop();
                       setQuantity(Math.max(1, quantity - 1));
                     }}
-                    className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-xs active:scale-90 transition-all cursor-pointer"
+                    aria-label="Decrease quantity"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className="text-sm font-black text-slate-900 dark:text-white">{quantity}</span>
+                  <span className="min-w-[36px] text-center text-sm sm:text-base font-black font-fredoka text-slate-900 dark:text-white px-2">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => {
                       sounds.playPop();
                       setQuantity(quantity + 1);
                     }}
-                    className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-xs active:scale-90 transition-all cursor-pointer"
+                    aria-label="Increase quantity"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>

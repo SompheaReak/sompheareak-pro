@@ -70,8 +70,9 @@ export const CustomerBar: React.FC = () => {
         {/* 1. Home Button */}
         <button
           onClick={handleHome}
-          className="flex flex-col items-center gap-0.5 hover:text-emerald-500 transition-colors py-1 px-2 group"
+          className="min-w-[54px] flex flex-col items-center justify-center gap-0.5 hover:text-emerald-500 transition-colors py-1.5 px-2 group active:scale-90 cursor-pointer"
           title="Return to Home"
+          aria-label="Home"
         >
           <Home className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-600 dark:text-slate-400 group-hover:text-emerald-500" />
           <span className="text-[10px] font-black font-fredoka uppercase tracking-wider">Home</span>
@@ -83,13 +84,14 @@ export const CustomerBar: React.FC = () => {
             sounds.playPop();
             setOrderHistoryModalOpen(true);
           }}
-          className="relative flex flex-col items-center gap-0.5 hover:text-emerald-500 transition-colors py-1 px-2 group"
+          className="relative min-w-[54px] flex flex-col items-center justify-center gap-0.5 hover:text-emerald-500 transition-colors py-1.5 px-2 group active:scale-90 cursor-pointer"
           title="Check Order History & Receipts"
+          aria-label="Order History"
         >
           <Receipt className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-600 dark:text-slate-400 group-hover:text-emerald-500" />
           <span className="text-[10px] font-black font-fredoka uppercase tracking-wider">History</span>
           {userOrdersCount > 0 && (
-            <span className="absolute -top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 text-white font-black text-[9px] flex items-center justify-center shadow">
+            <span className="absolute -top-0.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white font-black text-[9px] flex items-center justify-center shadow">
               {userOrdersCount > 9 ? "9+" : userOrdersCount}
             </span>
           )}
@@ -98,8 +100,9 @@ export const CustomerBar: React.FC = () => {
         {/* 3. Center Logo (Click to Refresh the page & Return Home!) */}
         <button
           onClick={handleLogoClick}
-          className="relative -top-5 sm:-top-6 flex flex-col items-center group focus:outline-none"
+          className="relative -top-5 sm:-top-6 flex flex-col items-center group focus:outline-none cursor-pointer"
           title="Click Logo to Return Home and Refresh"
+          aria-label="Refresh and return to home"
         >
           <div
             className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-gradient-to-tr from-emerald-500 via-teal-400 to-green-600 shadow-toy-green-glow border-2 border-white dark:border-slate-900 group-hover:scale-110 active:scale-95 transition-all cursor-pointer relative overflow-hidden ${
@@ -132,8 +135,9 @@ export const CustomerBar: React.FC = () => {
             sounds.playPop();
             setAccountModalOpen(true);
           }}
-          className="relative flex flex-col items-center gap-0.5 hover:text-emerald-500 transition-colors py-1 px-2 group"
+          className="relative min-w-[54px] flex flex-col items-center justify-center gap-0.5 hover:text-emerald-500 transition-colors py-1.5 px-2 group active:scale-90 cursor-pointer"
           title="Customer Profile & Login"
+          aria-label="Account"
         >
           <div className="relative">
             <User className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-600 dark:text-slate-400 group-hover:text-emerald-500" />
@@ -152,8 +156,9 @@ export const CustomerBar: React.FC = () => {
             sounds.playPop();
             setCartDrawerOpen(true);
           }}
-          className="relative flex flex-col items-center gap-0.5 hover:text-emerald-500 transition-colors py-1 px-2 group"
+          className="relative min-w-[54px] flex flex-col items-center justify-center gap-0.5 hover:text-emerald-500 transition-colors py-1.5 px-2 group active:scale-90 cursor-pointer"
           title="Open Cart"
+          aria-label="Cart"
         >
           <div className="relative">
             <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform text-slate-600 dark:text-slate-400 group-hover:text-emerald-500" />

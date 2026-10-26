@@ -193,7 +193,8 @@ export const CheckoutModal: React.FC = () => {
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-90 cursor-pointer shadow-sm"
+            aria-label="Close Checkout"
           >
             <X className="w-5 h-5" />
           </button>
@@ -201,11 +202,11 @@ export const CheckoutModal: React.FC = () => {
           {!submittedOrder ? (
             /* Checkout Form */
             <div>
-              <div className="flex items-center gap-2 mb-2 text-emerald-600 dark:text-toy-pink font-extrabold text-xs uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-2 text-emerald-600 dark:text-toy-pink font-extrabold text-xs uppercase tracking-wider pr-10">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Fast & Secure Cambodia Checkout</span>
               </div>
-              <h2 className="text-2xl font-black font-fredoka text-slate-900 dark:text-white">{t("checkoutTitle")}</h2>
+              <h2 className="text-2xl font-black font-fredoka text-slate-900 dark:text-white pr-10">{t("checkoutTitle")}</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-6">
                 Verified Telegram order with Cash on Delivery or ABA KHQR Scan.
               </p>
@@ -223,7 +224,7 @@ export const CheckoutModal: React.FC = () => {
                     value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                     placeholder="e.g. Chan Dara / Sokha"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                    className="w-full h-11 sm:h-12 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                   />
                 </div>
 
@@ -240,7 +241,7 @@ export const CheckoutModal: React.FC = () => {
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="012 345 678"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      className="w-full h-11 sm:h-12 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                     />
                   </div>
                   <div>
@@ -253,7 +254,7 @@ export const CheckoutModal: React.FC = () => {
                       value={form.telegramHandle}
                       onChange={(e) => setForm({ ...form, telegramHandle: e.target.value })}
                       placeholder="@username"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      className="w-full h-11 sm:h-12 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                     />
                   </div>
                 </div>
@@ -275,7 +276,7 @@ export const CheckoutModal: React.FC = () => {
                         paymentMethod: isPP ? prev.paymentMethod : "khqr",
                       }));
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none cursor-pointer"
+                    className="w-full h-11 sm:h-12 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none cursor-pointer"
                   >
                     {cambodiaProvinces.map((prov) => (
                       <option key={prov} value={prov}>
@@ -296,7 +297,7 @@ export const CheckoutModal: React.FC = () => {
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     placeholder="House number, Street, Sangkat, Khan..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none resize-none"
+                    className="w-full py-3 px-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:border-emerald-500 outline-none resize-none"
                   />
                 </div>
 
@@ -321,19 +322,19 @@ export const CheckoutModal: React.FC = () => {
                         sounds.playPop();
                         setForm({ ...form, paymentMethod: "cod" });
                       }}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all relative ${
+                      className={`p-3.5 sm:p-4 rounded-2xl border text-left text-xs font-bold transition-all relative active:scale-98 ${
                         !isPhnomPenh(form.province)
                           ? "opacity-45 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
                           : form.paymentMethod === "cod"
-                          ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-md cursor-pointer"
+                          ? "bg-amber-100 dark:bg-toy-yellow/20 border-amber-500 dark:border-toy-yellow text-amber-900 dark:text-white shadow-md cursor-pointer ring-2 ring-amber-400/30"
                           : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-850 cursor-pointer"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{t("cod")}</span>
+                        <span className="font-fredoka text-sm">{t("cod")}</span>
                         {!isPhnomPenh(form.province) && <span className="text-[10px]">🔒</span>}
                       </div>
-                      <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                         {isPhnomPenh(form.province) ? "Phnom Penh delivery" : "Phnom Penh only"}
                       </div>
                     </button>
@@ -343,14 +344,14 @@ export const CheckoutModal: React.FC = () => {
                         sounds.playPop();
                         setForm({ ...form, paymentMethod: "khqr" });
                       }}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                      className={`p-3.5 sm:p-4 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer active:scale-98 ${
                         form.paymentMethod === "khqr"
                           ? "bg-emerald-100 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-white shadow-toy-green-glow ring-2 ring-emerald-500/30"
                           : "bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-850"
                       }`}
                     >
-                      <div>{t("khqr")}</div>
-                      <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="font-fredoka text-sm">{t("khqr")}</div>
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                         Online payment (All Cambodia)
                       </div>
                     </button>
@@ -507,9 +508,9 @@ export const CheckoutModal: React.FC = () => {
 
               <button
                 onClick={handleClose}
-                className="mt-3 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-bold"
+                className="w-full mt-3 py-3 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                Close & Return to Toys
+                <span>Close & Return to Toys Catalog</span>
               </button>
             </div>
           )}

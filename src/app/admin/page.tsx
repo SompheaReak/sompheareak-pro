@@ -2073,21 +2073,22 @@ export default function AdminPage() {
           )}
 
           {activeTab === "category_boxes" && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={handleResetBoxes}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-slate-200 dark:border-slate-700"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-slate-200 dark:border-slate-700 active:scale-95 shrink-0"
                 title="Reset to default 3 reference boxes"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+                <RotateCcw className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span className="hidden sm:inline">Reset Default Bento</span>
+                <span className="sm:hidden">Reset</span>
               </button>
 
               <button
                 onClick={handleOpenAddBox}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all"
+                className="flex-1 sm:flex-initial justify-center px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
                 <span>Add Category Box 🍱</span>
               </button>
             </div>
@@ -2250,12 +2251,12 @@ export default function AdminPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-slate-800 flex gap-1.5 sm:gap-2">
+                    <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
                       <button
                         onClick={() => handleOpenEditProduct(prod)}
-                        className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all"
+                        className="flex-1 h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                       >
-                        <Edit2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Edit</span>
                       </button>
 
@@ -2267,10 +2268,10 @@ export default function AdminPage() {
                             showToast(`Deleted "${prod.name}" from store.`);
                           }
                         }}
-                        className="py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-all border border-rose-200 dark:border-rose-900/40"
+                        className="h-9 sm:h-10 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40 active:scale-95 cursor-pointer"
                         title="Delete product from store"
                       >
-                        <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
@@ -2412,7 +2413,7 @@ export default function AdminPage() {
                               target="_blank"
                               rel="noreferrer"
                               onClick={() => sounds.playPop()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8ec3] text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-3.5 rounded-xl bg-[#229ED9] hover:bg-[#1e8ec3] text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                               title="Directly message customer on Telegram"
                             >
                               <Send className="w-3.5 h-3.5" />
@@ -2422,16 +2423,16 @@ export default function AdminPage() {
 
                           {/* Direct Confirm or Reject Buttons for Pending */}
                           {ord.status === "pending" && (
-                            <div className="inline-flex items-center gap-1.5">
+                            <div className="inline-flex items-center gap-2">
                               <button
                                 onClick={() => {
                                   sounds.playChime();
                                   updateOrderStatus(ord.id, "confirmed");
                                   showToast(`Order ${ord.orderRef} CONFIRMED! Notification sent.`);
                                 }}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <CheckCircle2 className="w-4 h-4" />
                                 <span>✓ Confirm</span>
                               </button>
                               <button
@@ -2442,25 +2443,25 @@ export default function AdminPage() {
                                     showToast(`Order ${ord.orderRef} REJECTED.`);
                                   }
                                 }}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                               >
-                                <XCircle className="w-3.5 h-3.5" />
+                                <XCircle className="w-4 h-4" />
                                 <span>✕ Reject</span>
                               </button>
                             </div>
                           )}
 
                           {ord.status === "confirmed" && (
-                            <div className="inline-flex items-center gap-1.5">
+                            <div className="inline-flex items-center gap-2">
                               <button
                                 onClick={() => {
                                   sounds.playPop();
                                   updateOrderStatus(ord.id, "packaging");
                                   showToast(`Order ${ord.orderRef} moved to PACKAGING.`);
                                 }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                               >
-                                <Package className="w-3.5 h-3.5" />
+                                <Package className="w-4 h-4" />
                                 <span>Pack</span>
                               </button>
                               <button
@@ -2468,7 +2469,7 @@ export default function AdminPage() {
                                   updateOrderStatus(ord.id, "rejected");
                                   showToast(`Order ${ord.orderRef} marked as Rejected.`);
                                 }}
-                                className="px-2 py-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-xs font-bold"
+                                className="h-9 sm:h-10 px-3 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition-all active:scale-95 cursor-pointer"
                               >
                                 Reject
                               </button>
@@ -2482,9 +2483,9 @@ export default function AdminPage() {
                                 updateOrderStatus(ord.id, "shipped");
                                 showToast(`Order ${ord.orderRef} moved to SHIPPED 🚚.`);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                             >
-                              <Truck className="w-3.5 h-3.5" />
+                              <Truck className="w-4 h-4" />
                               <span>Ship</span>
                             </button>
                           )}
@@ -2496,9 +2497,9 @@ export default function AdminPage() {
                                 updateOrderStatus(ord.id, "delivered");
                                 showToast(`Order ${ord.orderRef} marked as DELIVERED 🎉!`);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <CheckCircle2 className="w-4 h-4" />
                               <span>Deliver</span>
                             </button>
                           )}
@@ -2510,9 +2511,9 @@ export default function AdminPage() {
                                 updateOrderStatus(ord.id, "confirmed");
                                 showToast(`Order ${ord.orderRef} re-opened and Confirmed.`);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95"
+                              className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
                             >
-                              <RotateCcw className="w-3.5 h-3.5" />
+                              <RotateCcw className="w-4 h-4" />
                               <span>Re-Confirm</span>
                             </button>
                           )}
@@ -2523,14 +2524,14 @@ export default function AdminPage() {
                               sounds.playPop();
                               setSelectedReceiptOrder(ord);
                             }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-colors"
+                            className="inline-flex items-center gap-1.5 h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
                             title="View Printable Receipt"
                           >
-                            <Receipt className="w-3.5 h-3.5 text-emerald-600 dark:text-toy-cyan" />
-                            <span className="hidden sm:inline">Receipt</span>
+                            <Receipt className="w-4 h-4 text-emerald-600 dark:text-toy-cyan" />
+                            <span>Receipt</span>
                           </button>
 
-                          {/* Delete Order */}
+                          {/* Delete Order (Isolated & Protected Touch Target) */}
                           <button
                             onClick={() => {
                               if (confirm(`Delete order ${ord.orderRef}?`)) {
@@ -2539,8 +2540,9 @@ export default function AdminPage() {
                                 showToast(`Deleted order ${ord.orderRef}`);
                               }
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                            className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-500 hover:text-rose-600 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 ml-auto sm:ml-0"
                             title="Delete order"
+                            aria-label="Delete order"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -2745,7 +2747,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <span className="text-[11px] text-slate-400">Min spend: ${vouch.minSpend}</span>
+                    <span className="text-[11px] text-slate-400 font-medium">Min spend: ${vouch.minSpend}</span>
                     <button
                       onClick={() => {
                         if (confirm(`Delete voucher ${vouch.code}?`)) {
@@ -2754,7 +2756,7 @@ export default function AdminPage() {
                           showToast(`Deleted voucher ${vouch.code}`);
                         }
                       }}
-                      className="text-xs font-bold text-rose-500 hover:underline flex items-center gap-1"
+                      className="h-8 sm:h-9 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete</span>
@@ -2908,20 +2910,20 @@ export default function AdminPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 sm:gap-2">
+                    <div className="pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
                       <button
                         onClick={() => handleOpenEditCharm(charm)}
-                        className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all"
+                        className="flex-1 h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                       >
-                        <Edit2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Edit</span>
                       </button>
                       <button
                         onClick={() => handleDeleteCharm(charm.id, charm.name)}
-                        className="py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40"
+                        className="h-9 sm:h-10 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-rose-200 dark:border-rose-900/40 active:scale-95 cursor-pointer"
                         title="Delete charm from store"
                       >
-                        <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
@@ -2989,15 +2991,15 @@ export default function AdminPage() {
         {/* TAB 7: CATEGORY BENTO BOXES MANAGEMENT              */}
         {/* ==================================================== */}
         {activeTab === "category_boxes" && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Header Card */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="min-w-0 w-full md:w-auto">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300 font-black text-xs font-fredoka uppercase tracking-wider mb-2">
-                  <Images className="w-3.5 h-3.5" />
-                  <span>Frontpage Showcase Bento Grid</span>
+                  <Images className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Frontpage Showcase Bento Grid</span>
                 </div>
-                <h3 className="text-xl font-black font-fredoka text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-black font-fredoka text-slate-900 dark:text-white">
                   Category Boxes & Showcase Cards
                 </h3>
                 <p className="text-xs text-slate-500 max-w-xl mt-1 leading-relaxed">
@@ -3005,54 +3007,60 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
                 <button
                   onClick={handleResetBoxes}
-                  className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-1.5 active:scale-95"
                   title="Restore original 3 default boxes"
                 >
-                  <RotateCcw className="w-4 h-4 text-amber-500" />
+                  <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
                   <span>Reset Default 3 Boxes</span>
                 </button>
                 <button
                   onClick={handleOpenAddBox}
-                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black font-fredoka text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 active:scale-95"
+                  className="px-5 py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black font-fredoka text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 shrink-0" />
                   <span>Add New Category Box 🍱</span>
                 </button>
               </div>
             </div>
 
             {/* LIVE BENTO GRID VISUAL PREVIEW */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  <h4 className="font-black font-fredoka text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                  <h4 className="font-black font-fredoka text-xs sm:text-sm uppercase tracking-wider text-slate-900 dark:text-white truncate">
                     Live Customer Frontpage Preview
                   </h4>
                 </div>
-                <span className="text-xs text-slate-400 font-bold">
-                  {categoryBoxes?.filter((b) => b.active).length || 0} active cards on customer front
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold sm:hidden">
+                    Tap to edit ✎
+                  </span>
+                  <span className="text-xs text-slate-400 font-bold hidden sm:inline">
+                    {categoryBoxes?.filter((b) => b.active).length || 0} active cards on customer front
+                  </span>
+                </div>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-2xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
-                <div className="grid grid-cols-2 gap-3.5 sm:gap-5 max-w-4xl mx-auto">
+              <div className="p-2.5 sm:p-6 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-5 max-w-4xl mx-auto">
                   {(categoryBoxes || []).map((box, idx) => {
                     const isFull = box.span === "full";
                     return (
                       <div
                         key={box.id}
-                        className={`group relative overflow-hidden rounded-[22px] sm:rounded-[28px] border-2 ${
+                        onClick={() => handleOpenEditBox(box)}
+                        className={`group relative overflow-hidden rounded-[18px] sm:rounded-[28px] border-2 ${
                           box.active
                             ? "border-emerald-500/60 dark:border-emerald-500/40"
                             : "border-dashed border-slate-400 opacity-60"
-                        } bg-slate-900 shadow-lg ${
+                        } bg-slate-900 shadow-lg cursor-pointer transition-all active:scale-[0.98] ${
                           isFull
-                            ? "col-span-2 aspect-[21/9] sm:aspect-[2.4/1] min-h-[170px]"
-                            : "col-span-1 aspect-[4/5] sm:aspect-[1/1] md:aspect-[4/5]"
+                            ? "col-span-2 aspect-[21/9] sm:aspect-[2.4/1] min-h-[140px] sm:min-h-[170px]"
+                            : "col-span-1 aspect-[3/4] sm:aspect-[1/1] md:aspect-[4/5] min-h-[170px] sm:min-h-0"
                         }`}
                       >
                         {/* Background Image */}
@@ -3061,7 +3069,7 @@ export default function AdminPage() {
                             src={box.image}
                             alt={box.title}
                             fill
-                            className="object-cover"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                             unoptimized={box.image.startsWith("data:")}
                           />
                         </div>
@@ -3070,28 +3078,42 @@ export default function AdminPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent z-10" />
 
                         {/* Top Action Overlay inside Card */}
-                        <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="absolute top-2.5 inset-x-2.5 sm:top-3 sm:inset-x-3 z-30 flex items-start justify-between gap-1.5">
+                          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
                             {box.badge && (
-                              <span className="px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-emerald-400 border border-emerald-400/40 text-[9px] font-black uppercase">
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-emerald-400 border border-emerald-400/40 text-[8px] sm:text-[9px] font-black uppercase truncate max-w-[70px] sm:max-w-none">
                                 {box.badge}
                               </span>
                             )}
-                            <span className="px-2 py-0.5 rounded-full bg-black/70 text-slate-300 text-[9px] font-bold">
-                              {box.span === "full" ? "2-Col Banner" : "1-Col Half"}
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-black/70 text-slate-300 text-[8px] sm:text-[9px] font-bold shrink-0">
+                              {box.span === "full" ? "2-Col" : "1-Col"}
                             </span>
                             {!box.active && (
-                              <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-black">
-                                HIDDEN
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-rose-600 text-white text-[8px] sm:text-[9px] font-black shrink-0">
+                                OFF
                               </span>
                             )}
                           </div>
 
                           {/* Quick Admin Actions on Preview */}
-                          <div className="flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-xl border border-white/20">
+                          {/* Mobile: compact edit pill */}
+                          <div className="sm:hidden flex items-center bg-black/75 backdrop-blur-md p-1 rounded-lg border border-white/20 shrink-0">
+                            <span className="p-0.5 text-white group-hover:text-amber-400">
+                              <Edit2 className="w-3 h-3 text-amber-300" />
+                            </span>
+                          </div>
+
+                          {/* Desktop: Full toolbar */}
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="hidden sm:flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-xl border border-white/20 shrink-0"
+                          >
                             <button
                               type="button"
-                              onClick={() => handleMoveBox(box, "up")}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveBox(box, "up");
+                              }}
                               disabled={idx === 0}
                               className="p-1 rounded text-white hover:text-emerald-400 disabled:opacity-30"
                               title="Move card left / up"
@@ -3100,7 +3122,10 @@ export default function AdminPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleMoveBox(box, "down")}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveBox(box, "down");
+                              }}
                               disabled={idx === (categoryBoxes?.length || 0) - 1}
                               className="p-1 rounded text-white hover:text-emerald-400 disabled:opacity-30"
                               title="Move card right / down"
@@ -3109,7 +3134,10 @@ export default function AdminPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleOpenEditBox(box)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditBox(box);
+                              }}
                               className="p-1 rounded text-white hover:text-amber-400"
                               title="Edit picture & details"
                             >
@@ -3117,7 +3145,10 @@ export default function AdminPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteCategoryBox(box)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCategoryBox(box);
+                              }}
                               className="p-1 rounded text-white hover:text-rose-400"
                               title="Delete box"
                             >
@@ -3127,21 +3158,21 @@ export default function AdminPage() {
                         </div>
 
                         {/* Bottom Text */}
-                        <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-5 z-20 flex flex-col justify-end">
+                        <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-5 z-20 flex flex-col justify-end">
                           {box.titleKh && (
-                            <span className="text-[10px] sm:text-xs font-bold text-emerald-300 drop-shadow line-clamp-1">
+                            <span className="text-[9px] sm:text-xs font-bold text-emerald-300 drop-shadow line-clamp-1">
                               {box.titleKh}
                             </span>
                           )}
                           <h3
-                            className={`font-black uppercase tracking-tight text-white drop-shadow-lg font-fredoka leading-tight ${
-                              isFull ? "text-lg sm:text-2xl" : "text-sm sm:text-lg"
+                            className={`font-black uppercase tracking-tight text-white drop-shadow-lg font-fredoka leading-tight line-clamp-2 ${
+                              isFull ? "text-base sm:text-2xl" : "text-xs sm:text-lg"
                             }`}
                           >
                             {box.title}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-300">
-                            <span className="bg-emerald-950/80 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-700/50">
+                          <div className="flex items-center gap-2 mt-1 text-[9px] sm:text-[10px] text-slate-300">
+                            <span className="bg-emerald-950/80 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-700/50 truncate max-w-full">
                               {box.actionType === "link" ? `🔗 URL: ${box.actionValue}` : `🏷️ Cat: ${box.actionValue}`}
                             </span>
                           </div>
@@ -3154,18 +3185,18 @@ export default function AdminPage() {
             </div>
 
             {/* BOXES MANAGEMENT LIST & ACTIONS */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-black font-fredoka text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="font-black font-fredoka text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
                   <span>List of All Category Boxes</span>
                   <span className="text-xs text-slate-500 font-bold">({categoryBoxes?.length || 0})</span>
                 </h4>
 
                 <button
                   onClick={handleOpenAddBox}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-sm flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 shrink-0" />
                   <span>Add Box</span>
                 </button>
               </div>
@@ -3174,11 +3205,11 @@ export default function AdminPage() {
                 {(categoryBoxes || []).map((box, idx) => (
                   <div
                     key={box.id}
-                    className="p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:border-emerald-500/50"
+                    className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 transition-all hover:border-emerald-500/50"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
                       {/* Image Thumbnail */}
-                      <div className="relative w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden bg-slate-900 border border-slate-300 dark:border-slate-700 shrink-0">
+                      <div className="relative w-14 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden bg-slate-900 border border-slate-300 dark:border-slate-700 shrink-0">
                         <Image
                           src={box.image}
                           alt={box.title}
@@ -3188,18 +3219,18 @@ export default function AdminPage() {
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h5 className="font-black font-fredoka text-sm sm:text-base text-slate-900 dark:text-white">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <h5 className="font-black font-fredoka text-sm sm:text-base text-slate-900 dark:text-white truncate max-w-full">
                             {box.title}
                           </h5>
                           {box.titleKh && (
-                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium truncate">
                               ({box.titleKh})
                             </span>
                           )}
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase shrink-0 ${
                               box.span === "full"
                                 ? "bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800"
                                 : "bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800"
@@ -3208,7 +3239,7 @@ export default function AdminPage() {
                             {box.span === "full" ? "Full Width (2 Cols)" : "Half Width (1 Col)"}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase shrink-0 ${
                               box.active
                                 ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
                                 : "bg-slate-200 dark:bg-slate-800 text-slate-500"
@@ -3218,8 +3249,8 @@ export default function AdminPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                          <span>
+                        <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                          <span className="truncate max-w-full">
                             Action:{" "}
                             <strong className="text-slate-800 dark:text-slate-200">
                               {box.actionType === "link" ? `Navigate to ${box.actionValue}` : `Filter ${box.actionValue}`}
@@ -3232,41 +3263,49 @@ export default function AdminPage() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveBox(box, "up")}
-                        disabled={idx === 0}
-                        className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30"
-                        title="Move Up"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveBox(box, "down")}
-                        disabled={idx === (categoryBoxes?.length || 0) - 1}
-                        className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30"
-                        title="Move Down"
-                      >
-                        ▼
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditBox(box)}
-                        className="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold font-fredoka flex items-center gap-1.5 transition-all"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit Box</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCategoryBox(box)}
-                        className="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition-all"
-                        title="Delete Box"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 pt-2.5 sm:pt-0 border-t border-slate-200/70 dark:border-slate-800 sm:border-t-0 shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveBox(box, "up")}
+                          disabled={idx === 0}
+                          className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 active:scale-95 transition-all flex items-center justify-center text-xs font-bold cursor-pointer disabled:cursor-not-allowed"
+                          title="Move Up"
+                          aria-label="Move Up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveBox(box, "down")}
+                          disabled={idx === (categoryBoxes?.length || 0) - 1}
+                          className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 active:scale-95 transition-all flex items-center justify-center text-xs font-bold cursor-pointer disabled:cursor-not-allowed"
+                          title="Move Down"
+                          aria-label="Move Down"
+                        >
+                          ▼
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditBox(box)}
+                          className="h-9 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold font-fredoka flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>Edit Box</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategoryBox(box)}
+                          className="w-9 h-9 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                          title="Delete Box"
+                          aria-label="Delete Box"
+                        >
+                          <Trash2 className="w-4 h-4 shrink-0" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -3379,7 +3418,7 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenEditCategory(cat)}
-                          className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold font-fredoka flex items-center gap-1.5 transition-all"
+                          className="h-9 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold font-fredoka flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                           <span>Edit</span>
@@ -3388,10 +3427,11 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteCategory(cat)}
-                            className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition-all"
+                            className="w-9 h-9 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                             title="Delete Filter"
+                            aria-label="Delete Filter"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -4884,38 +4924,42 @@ export default function AdminPage() {
       {/* ==================================================== */}
       <AnimatePresence>
         {boxModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-slate-900 border-2 border-emerald-500/40 rounded-3xl p-5 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[90dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]"
+              className="relative w-full max-w-lg my-auto bg-white dark:bg-slate-900 border-2 border-emerald-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[92dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]"
             >
               <button
                 onClick={() => setBoxModalOpen(false)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500"
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 active:scale-95 transition-all z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <h2 className="text-xl font-black font-fredoka text-slate-900 dark:text-white mb-1">
-                {editingBox ? `Edit Category Box: ${editingBox.title}` : "Add New Category Box 🍱"}
-              </h2>
-              <p className="text-xs text-slate-500 mb-4">
-                This box appears on the customer home page matching your reference bento design.
-              </p>
+              <div className="pr-10 mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl font-black font-fredoka text-slate-900 dark:text-white leading-tight">
+                  {editingBox ? `Edit Box: ${editingBox.title}` : "Add Category Box 🍱"}
+                </h2>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                  This box appears on the customer home page matching your reference bento design.
+                </p>
+              </div>
 
-              <form onSubmit={handleSaveBox} className="space-y-4">
+              <form onSubmit={handleSaveBox} className="space-y-3.5 sm:space-y-4">
                 {/* Live Card Preview */}
-                <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span>Real-Time Visual Card Preview:</span>
                   </span>
 
                   <div
                     className={`relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 shadow-md ${
-                      bSpan === "full" ? "w-full aspect-[21/9]" : "w-48 sm:w-56 mx-auto aspect-[4/5]"
+                      bSpan === "full"
+                        ? "w-full aspect-[2.2/1] sm:aspect-[21/9] min-h-[140px] sm:min-h-[160px]"
+                        : "w-44 sm:w-56 mx-auto aspect-[4/5]"
                     }`}
                   >
                     {bImage ? (
@@ -4935,7 +4979,7 @@ export default function AdminPage() {
 
                     <div className="absolute top-2.5 inset-x-2.5 z-20 flex items-center justify-between pointer-events-none">
                       {bBadge ? (
-                        <span className="px-2 py-0.5 rounded-full bg-black/60 text-emerald-400 text-[8px] font-black uppercase border border-emerald-400/40">
+                        <span className="px-2 py-0.5 rounded-full bg-black/60 text-emerald-400 text-[8px] sm:text-[9px] font-black uppercase border border-emerald-400/40">
                           {bBadge}
                         </span>
                       ) : <span />}
@@ -4944,17 +4988,17 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="absolute bottom-0 inset-x-0 p-3 z-20">
+                    <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 z-20">
                       {bTitleKh && (
-                        <span className="text-[9px] font-bold text-emerald-300 block line-clamp-1">
+                        <span className="text-[9px] sm:text-[10px] font-bold text-emerald-300 block line-clamp-1">
                           {bTitleKh}
                         </span>
                       )}
-                      <h4 className="font-black text-white uppercase text-sm sm:text-base font-fredoka leading-tight drop-shadow">
+                      <h4 className="font-black text-white uppercase text-xs sm:text-base font-fredoka leading-tight drop-shadow line-clamp-2">
                         {bTitle || "CATEGORY TITLE"}
                       </h4>
                       {bSubtitle && (
-                        <p className="text-[9px] text-slate-300 line-clamp-1">{bSubtitle}</p>
+                        <p className="text-[9px] sm:text-[10px] text-slate-300 line-clamp-1">{bSubtitle}</p>
                       )}
                     </div>
                   </div>
@@ -5008,11 +5052,11 @@ export default function AdminPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                     Layout Width (Card Span) *
                   </label>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                     <button
                       type="button"
                       onClick={() => setBSpan("full")}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all ${
                         bSpan === "full"
                           ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-sm"
                           : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
@@ -5027,7 +5071,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setBSpan("half")}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all ${
                         bSpan === "half"
                           ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold shadow-sm"
                           : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
@@ -5048,7 +5092,7 @@ export default function AdminPage() {
                   </label>
 
                   {/* Presets */}
-                  <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
                     <button
                       type="button"
                       onClick={() => setBImage("/assets/categories/custom-bracelet.jpg")}
@@ -5058,7 +5102,7 @@ export default function AdminPage() {
                           : "bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
-                      <span className="text-xs block">📿 Italy Bracelet</span>
+                      <span className="text-[11px] sm:text-xs block truncate">📿 Bracelet</span>
                     </button>
                     <button
                       type="button"
@@ -5069,7 +5113,7 @@ export default function AdminPage() {
                           : "bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
-                      <span className="text-xs block">🧸 Minifigure</span>
+                      <span className="text-[11px] sm:text-xs block truncate">🧸 Minifigure</span>
                     </button>
                     <button
                       type="button"
@@ -5080,15 +5124,15 @@ export default function AdminPage() {
                           : "bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
-                      <span className="text-xs block">🏎️ Toys & RC</span>
+                      <span className="text-[11px] sm:text-xs block truncate">🏎️ Toys & RC</span>
                     </button>
                   </div>
 
                   {/* Upload from Device Button */}
                   <div className="flex gap-2 items-center mb-2">
-                    <label className="flex-1 cursor-pointer py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all">
-                      <Upload className="w-4 h-4 text-emerald-500" />
-                      <span>Upload Picture from Device 📸</span>
+                    <label className="flex-1 cursor-pointer py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98">
+                      <Upload className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span className="truncate">Upload Picture from Device 📸</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -5108,12 +5152,12 @@ export default function AdminPage() {
                     value={bImage}
                     onChange={(e) => setBImage(e.target.value)}
                     placeholder="or paste custom image URL / data URI"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                   />
                 </div>
 
                 {/* Click Action: Link vs Category */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       Action on Click *
@@ -5129,7 +5173,7 @@ export default function AdminPage() {
                           setBActionValue("minifigure");
                         }
                       }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                     >
                       <option value="category">Filter Store Category</option>
                       <option value="link">Open Page Link / Studio</option>
@@ -5146,13 +5190,13 @@ export default function AdminPage() {
                         value={bActionValue}
                         onChange={(e) => setBActionValue(e.target.value)}
                         placeholder="e.g. /italy-bracelet"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                        className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                       />
                     ) : (
                       <select
                         value={bActionValue}
                         onChange={(e) => setBActionValue(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                        className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                       >
                         <option value="minifigure">Minifigure Arcade</option>
                         <option value="toy-universe">Tech Toys & RC</option>
@@ -5166,7 +5210,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Badge Tag & Sort Order */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       Badge Pill (Optional)
@@ -5176,7 +5220,7 @@ export default function AdminPage() {
                       value={bBadge}
                       onChange={(e) => setBBadge(e.target.value)}
                       placeholder="e.g. HOT 🔥, STUDIO 🔗, VIRAL"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                     />
                   </div>
 
@@ -5188,7 +5232,7 @@ export default function AdminPage() {
                       type="number"
                       value={bOrder}
                       onChange={(e) => setBOrder(parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
                     />
                   </div>
                 </div>
@@ -5208,7 +5252,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Modal Footer Buttons */}
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
                   {editingBox && (
                     <button
                       type="button"
@@ -5216,18 +5260,18 @@ export default function AdminPage() {
                         handleDeleteCategoryBox(editingBox);
                         setBoxModalOpen(false);
                       }}
-                      className="py-3 px-4 rounded-2xl font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/70 border border-rose-300 dark:border-rose-800/60 font-fredoka text-xs flex items-center justify-center gap-1.5 transition-all"
+                      className="py-3 px-4 rounded-xl sm:rounded-2xl font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/70 border border-rose-300 dark:border-rose-800/60 font-fredoka text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 sm:w-auto"
                     >
-                      <Trash2 className="w-4 h-4 text-rose-500" />
+                      <Trash2 className="w-4 h-4 text-rose-500 shrink-0" />
                       <span>Delete Box</span>
                     </button>
                   )}
 
                   <button
                     type="submit"
-                    className="flex-1 py-3.5 px-6 rounded-2xl font-black text-white bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 shadow-toy-green-glow border-b-4 border-emerald-950 font-fredoka text-sm flex items-center justify-center gap-2 hover:from-emerald-400 hover:to-green-500 active:scale-95 transition-all"
+                    className="flex-1 py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl font-black text-white bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 shadow-toy-green-glow border-b-4 border-emerald-950 font-fredoka text-xs sm:text-sm flex items-center justify-center gap-2 hover:from-emerald-400 hover:to-green-500 active:scale-95 transition-all"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>{editingBox ? "Save Box Changes" : "Create Category Box 🍱"}</span>
                   </button>
                 </div>
