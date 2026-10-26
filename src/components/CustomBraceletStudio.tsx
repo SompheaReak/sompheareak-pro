@@ -27,6 +27,7 @@ import {
   RotateCcw,
   Send,
   Shuffle,
+  Images,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Charm, CustomBraceletItem } from "@/types/store";
@@ -63,6 +64,7 @@ interface CustomBraceletStudioProps {
     finish: string;
   }) => void;
   onOpenAddCharmModal?: () => void;
+  onOpenBulkCharmModal?: () => void;
 }
 
 export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
@@ -70,6 +72,7 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
   isAdminMode = false,
   onAddAsProduct,
   onOpenAddCharmModal,
+  onOpenBulkCharmModal,
 }) => {
   const { addCustomBraceletToCart, currency, t, language, charms, deleteCharm } = useStore();
 
@@ -589,15 +592,30 @@ export const CustomBraceletStudio: React.FC<CustomBraceletStudioProps> = ({
           <h3 className="text-base sm:text-lg font-black font-fredoka text-slate-900 dark:text-white flex items-center gap-2">
             <span>{language === "km" ? "✨ ត្បូងទាំងអស់" : "✨ All Charms"}</span>
           </h3>
-          {isAdminMode && onOpenAddCharmModal && (
-            <button
-              type="button"
-              onClick={onOpenAddCharmModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Upload Charm</span>
-            </button>
+          {isAdminMode && (
+            <div className="flex items-center gap-2">
+              {onOpenBulkCharmModal && (
+                <button
+                  type="button"
+                  onClick={onOpenBulkCharmModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+                  title="Upload 10+ charm photos at once"
+                >
+                  <Images className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Bulk Upload (10+) 📸</span>
+                </button>
+              )}
+              {onOpenAddCharmModal && (
+                <button
+                  type="button"
+                  onClick={onOpenAddCharmModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Upload Charm</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
 

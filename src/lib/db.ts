@@ -610,6 +610,36 @@ export async function addCharm(newCharm: Omit<Charm, "id"> & { id?: string }): P
   return charm;
 }
 
+export async function bulkAddCharms(newCharms: Array<Omit<Charm, "id"> & { id?: string }>): Promise<Charm[]> {
+  const db = await getDbAsync();
+  const createdList: Charm[] = [];
+
+  for (let i = 0; i < newCharms.length; i++) {
+    const nc = newCharms[i];
+    const id = nc.id || `charm-${Date.now()}-${i}-${Math.floor(Math.random() * 1000)}`;
+    const code = nc.code || generateUniqueCharmCode(nc, [...createdList, ...db.charms]);
+    const charm: Charm = {
+      ...nc,
+      id,
+      code,
+      name: (nc.name || "Custom Charm").trim(),
+      nameKh: (nc.nameKh || nc.name || "ផ្លាកម៉ូឌុល").trim(),
+      category: nc.category || "emblem",
+      price: Number(nc.price) || 1.5,
+      image: nc.image || "/assets/charm_clean.png",
+      plateImage: nc.plateImage || nc.image || "/assets/charm_clean.png",
+      isPopular: Boolean(nc.isPopular),
+      description: nc.description || "",
+    };
+    createdList.push(charm);
+  }
+
+  db.charms = ensureUniqueCharmCodes([...createdList, ...db.charms]);
+  saveDb(db);
+  await saveNeonKey("charms", db.charms);
+  return createdList;
+}
+
 export async function updateCharm(id: string, updates: Partial<Charm>): Promise<Charm | null> {
   const db = await getDbAsync();
   const idx = db.charms.findIndex((c) => c.id === id);

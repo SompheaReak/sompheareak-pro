@@ -74,6 +74,18 @@ export interface BulkPhotoItem {
   fileName: string;
 }
 
+export interface BulkCharmItem {
+  tempId: string;
+  code: string;
+  name: string;
+  nameKh: string;
+  category: string;
+  price: string;
+  isPopular: boolean;
+  image: string;
+  fileName: string;
+}
+
 const VALID_PASSWORDS = [
   "Sompheareakshop1234",
   "Sompheareak.com-Admin04/10/2026-Ming",
@@ -103,6 +115,7 @@ export default function AdminPage() {
     wipeAllProducts,
     charms,
     addCharm,
+    bulkAddCharms,
     updateCharm,
     deleteCharm,
     clearCharms,
@@ -184,6 +197,15 @@ export default function AdminPage() {
   const [cIsPopular, setCIsPopular] = useState<boolean>(true);
   const [cDescription, setCDescription] = useState("");
   const [isGeneratingCutout, setIsGeneratingCutout] = useState<boolean>(false);
+
+  // Bulk Charms Upload State (Multi-Photo = Multiple Charms)
+  const bulkCharmFileInputRef = useRef<HTMLInputElement>(null);
+  const [bulkCharmModalOpen, setBulkCharmModalOpen] = useState<boolean>(false);
+  const [bulkCharmItems, setBulkCharmItems] = useState<BulkCharmItem[]>([]);
+  const [bulkCharmGlobalCat, setBulkCharmGlobalCat] = useState<string>("emblem");
+  const [bulkCharmGlobalPrice, setBulkCharmGlobalPrice] = useState<string>("1.50");
+  const [bulkCharmIsProcessing, setBulkCharmIsProcessing] = useState<boolean>(false);
+  const [bulkCharmIsSubmitting, setBulkCharmIsSubmitting] = useState<boolean>(false);
 
   // Product Filters & Modal State
   const [productSearch, setProductSearch] = useState<string>("");
@@ -1314,6 +1336,268 @@ export default function AdminPage() {
   };
 
   // ==========================================
+  // BULK CHARMS UPLOAD HANDLERS
+  // ==========================================
+
+  // Process & optimize charm photo (downscales & trims transparent boundaries)
+  const optimizeCharmImageFile = (file: File): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (!dataUrl) return resolve(null);
+
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const naturalW = img.naturalWidth || img.width;
+            const naturalH = img.naturalHeight || img.height;
+            const canvas = document.createElement("canvas");
+            canvas.width = naturalW;
+            canvas.height = naturalH;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return resolve(dataUrl);
+
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, naturalW, naturalH);
+            const { data, width, height } = imgData;
+
+            let minX = width, minY = height, maxX = 0, maxY = 0;
+            let hasTransparent = false;
+
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
+                const alpha = data[(y * width + x) * 4 + 3];
+                if (alpha < 240) hasTransparent = true;
+                if (alpha > 20) {
+                  if (x < minX) minX = x;
+                  if (x > maxX) maxX = x;
+                  if (y < minY) minY = y;
+                  if (y > maxY) maxY = y;
+                }
+              }
+            }
+
+            let sourceX = 0;
+            let sourceY = 0;
+            let sourceW = naturalW;
+            let sourceH = naturalH;
+
+            if (hasTransparent && maxX > minX && maxY > minY) {
+              const trimW = maxX - minX + 1;
+              const trimH = maxY - minY + 1;
+              if (trimW < width * 0.98 || trimH < height * 0.98) {
+                sourceX = minX;
+                sourceY = minY;
+                sourceW = trimW;
+                sourceH = trimH;
+              }
+            }
+
+            const MAX_CHARM_DIM = 240;
+            let destW = sourceW;
+            let destH = sourceH;
+            if (destW > MAX_CHARM_DIM || destH > MAX_CHARM_DIM) {
+              if (destW > destH) {
+                destH = Math.max(1, Math.round((destH * MAX_CHARM_DIM) / destW));
+                destW = MAX_CHARM_DIM;
+              } else {
+                destW = Math.max(1, Math.round((destW * MAX_CHARM_DIM) / destH));
+                destH = MAX_CHARM_DIM;
+              }
+            }
+
+            const finalCanvas = document.createElement("canvas");
+            finalCanvas.width = destW;
+            finalCanvas.height = destH;
+            const finalCtx = finalCanvas.getContext("2d");
+            if (finalCtx) {
+              finalCtx.imageSmoothingEnabled = true;
+              finalCtx.imageSmoothingQuality = "high";
+              finalCtx.drawImage(canvas, sourceX, sourceY, sourceW, sourceH, 0, 0, destW, destH);
+              resolve(finalCanvas.toDataURL("image/png"));
+              return;
+            }
+            resolve(dataUrl);
+          } catch {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleTriggerBulkCharmPhotoUpload = () => {
+    try {
+      if (bulkCharmFileInputRef.current) {
+        bulkCharmFileInputRef.current.value = "";
+        bulkCharmFileInputRef.current.click();
+      } else {
+        setBulkCharmModalOpen(true);
+      }
+    } catch {
+      setBulkCharmModalOpen(true);
+    }
+    sounds.playPop();
+  };
+
+  const handleBulkCharmsSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setBulkCharmIsProcessing(true);
+    sounds.playPop();
+    showToast(`📸 Loading & optimizing ${files.length} charm photo(s)...`);
+
+    try {
+      const newItems: BulkCharmItem[] = [];
+      const defaultCat = bulkCharmGlobalCat || "emblem";
+      const defaultPrice = bulkCharmGlobalPrice || "1.50";
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const optimized = await optimizeCharmImageFile(file);
+        if (!optimized) continue;
+
+        const cleanName = formatFilenameToName(file.name);
+        const autoCode = generateUniqueCharmCode(
+          { name: cleanName, category: defaultCat },
+          [
+            ...(charms || []),
+            ...newItems.map((item) => ({
+              id: item.tempId,
+              code: item.code,
+              name: item.name,
+              nameKh: item.nameKh,
+              category: item.category,
+              price: parseFloat(item.price) || 1.5,
+              image: item.image,
+            })),
+          ]
+        );
+
+        newItems.push({
+          tempId: `bulk-charm-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+          code: autoCode,
+          name: cleanName,
+          nameKh: cleanName,
+          category: defaultCat,
+          price: defaultPrice,
+          isPopular: false,
+          image: optimized,
+          fileName: file.name,
+        });
+      }
+
+      if (newItems.length === 0) {
+        alert("Could not load charm photos. Please ensure you select valid image files.");
+        return;
+      }
+
+      setBulkCharmItems((prev) => [...prev, ...newItems]);
+      setBulkCharmModalOpen(true);
+      sounds.playChime();
+      showToast(`🎉 Loaded ${newItems.length} charms! Ready to review and publish.`);
+    } catch (err: any) {
+      alert("Failed to process charm images: " + (err?.message || "Error"));
+    } finally {
+      setBulkCharmIsProcessing(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleReplaceSingleCharmPhoto = async (index: number, file: File) => {
+    const optimized = await optimizeCharmImageFile(file);
+    if (!optimized) return;
+    setBulkCharmItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], image: optimized };
+      }
+      return copy;
+    });
+    sounds.playChime();
+    showToast("Updated charm photo!");
+  };
+
+  const handleApplyCharmCatToAll = () => {
+    if (!bulkCharmGlobalCat) return;
+    sounds.playPop();
+    setBulkCharmItems((prev) => prev.map((item) => ({ ...item, category: bulkCharmGlobalCat })));
+    showToast(`Applied "${bulkCharmGlobalCat}" category to all ${bulkCharmItems.length} charms!`);
+  };
+
+  const handleApplyCharmPriceToAll = () => {
+    const num = parseFloat(bulkCharmGlobalPrice);
+    if (isNaN(num) || num <= 0) {
+      alert("Please enter a valid price (e.g. 1.50)");
+      return;
+    }
+    sounds.playPop();
+    setBulkCharmItems((prev) => prev.map((item) => ({ ...item, price: bulkCharmGlobalPrice })));
+    showToast(`Applied $${num.toFixed(2)} price to all ${bulkCharmItems.length} charms!`);
+  };
+
+  const updateBulkCharmItem = (index: number, updates: Partial<BulkCharmItem>) => {
+    setBulkCharmItems((prev) => {
+      const copy = [...prev];
+      if (copy[index]) {
+        copy[index] = { ...copy[index], ...updates };
+      }
+      return copy;
+    });
+  };
+
+  const removeBulkCharmItem = (index: number) => {
+    sounds.playPop();
+    setBulkCharmItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveAllBulkCharms = async () => {
+    if (bulkCharmItems.length === 0) {
+      alert("No charms to save. Please select photos first.");
+      return;
+    }
+
+    const emptyNameIndex = bulkCharmItems.findIndex((item) => !item.name.trim());
+    if (emptyNameIndex !== -1) {
+      alert(`Charm #${emptyNameIndex + 1} is missing a name. Please enter a name for all charms.`);
+      return;
+    }
+
+    setBulkCharmIsSubmitting(true);
+    try {
+      sounds.playChime();
+      const charmsToCreate = bulkCharmItems.map((item) => ({
+        code: item.code.trim(),
+        name: item.name.trim(),
+        nameKh: item.nameKh.trim() || item.name.trim(),
+        category: item.category || "emblem",
+        price: parseFloat(item.price) || 1.5,
+        image: item.image,
+        plateImage: item.image,
+        isPopular: item.isPopular,
+        description: "Modular 9mm Italian charm link in 316L waterproof inox steel.",
+      }));
+
+      await bulkAddCharms(charmsToCreate);
+      sounds.playFanfare();
+      showToast(`🎉 Published ${charmsToCreate.length} new charms to modular bracelet studio!`);
+      setBulkCharmItems([]);
+      setBulkCharmModalOpen(false);
+    } catch (err: any) {
+      alert("Failed to save charms: " + (err?.message || "Unknown error"));
+    } finally {
+      setBulkCharmIsSubmitting(false);
+    }
+  };
+
+  // ==========================================
   // CATEGORY BENTO BOXES HANDLERS
   // ==========================================
   const handleOpenAddBox = () => {
@@ -1640,6 +1924,17 @@ export default function AdminPage() {
           accept="image/*"
           multiple
           onChange={handleBulkPhotosSelected}
+          className="fixed -top-[1000px] -left-[1000px] opacity-0 pointer-events-none w-1 h-1"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        {/* Hidden master input for bulk charm photo upload (1 Photo = 1 Charm) */}
+        <input
+          ref={bulkCharmFileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleBulkCharmsSelected}
           className="fixed -top-[1000px] -left-[1000px] opacity-0 pointer-events-none w-1 h-1"
           tabIndex={-1}
           aria-hidden="true"
@@ -2042,17 +2337,51 @@ export default function AdminPage() {
           {activeTab === "bracelet_studio" && (
             <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
+                onClick={handleTriggerBulkCharmPhotoUpload}
+                className="py-2.5 px-3.5 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer ring-2 ring-indigo-400/50"
+                title="Select 10+ charm photos from your device to upload 10+ different charms with batch editing"
+              >
+                <Images className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Bulk Upload (10+ Charms) 📸</span>
+              </button>
+              <button
                 onClick={handleOpenAddCharm}
-                className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Upload Charm Photo 📸</span>
+                <span>Upload Single Charm 📸</span>
               </button>
             </div>
           )}
 
           {activeTab === "charms" && (
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTriggerBulkCharmPhotoUpload}
+                className="py-2.5 px-3.5 sm:px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 hover:scale-102 active:scale-95 transition-all cursor-pointer ring-2 ring-indigo-400/50"
+                title="Select 10+ charm photos from your device to upload 10+ different charms with batch editing"
+              >
+                <Images className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Bulk Upload (10+ Charms) 📸</span>
+              </button>
+
+              {bulkCharmItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    sounds.playPop();
+                    setBulkCharmModalOpen(true);
+                  }}
+                  className="py-2.5 px-3 sm:px-3.5 rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black font-fredoka text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all animate-bounce cursor-pointer"
+                  title="You have unsaved bulk charms. Click to review and publish!"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Resume Batch ({bulkCharmItems.length})</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   if (confirm("Clear all charms from inventory?")) {
@@ -2061,7 +2390,7 @@ export default function AdminPage() {
                     showToast("Charm inventory cleared.");
                   }
                 }}
-                className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-rose-200 dark:border-rose-800/50"
+                className="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-rose-200 dark:border-rose-800/50 cursor-pointer"
                 title="Clear charm inventory"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -2070,10 +2399,10 @@ export default function AdminPage() {
 
               <button
                 onClick={handleOpenAddCharm}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-800 text-white font-black font-fredoka text-xs sm:text-sm shadow-toy-green-glow flex items-center gap-2 hover:scale-102 active:scale-95 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Upload Charm Photo 📸</span>
+                <span>Upload 1 by 1 📸</span>
               </button>
             </div>
           )}
@@ -2828,13 +3157,22 @@ export default function AdminPage() {
                     ? "Your charm inventory is ready! Click 'Upload Charm Photo' below to add charm photos directly from your device."
                     : "Try clearing the search filter or click 'Add New Charm' to create one."}
                 </p>
-                <button
-                  onClick={handleOpenAddCharm}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black font-fredoka text-xs shadow-md hover:from-emerald-400 hover:to-green-500 transition-all active:scale-95 mt-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{charms.length === 0 ? "Upload & Add First Charm 📸" : "Add First Charm"}</span>
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <button
+                    onClick={handleTriggerBulkCharmPhotoUpload}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-black font-fredoka text-xs shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Images className="w-4 h-4 text-amber-300" />
+                    <span>Bulk Upload (10+ Charms) 📸</span>
+                  </button>
+                  <button
+                    onClick={handleOpenAddCharm}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black font-fredoka text-xs shadow-md hover:from-emerald-400 hover:to-green-500 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Upload 1 by 1 📸</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
@@ -2962,8 +3300,16 @@ export default function AdminPage() {
 
               <div className="flex items-center gap-2 flex-wrap">
                 <button
+                  type="button"
+                  onClick={handleTriggerBulkCharmPhotoUpload}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black font-fredoka text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <Images className="w-4 h-4 text-amber-300" />
+                  <span>Bulk Upload Charms (10+) 📸</span>
+                </button>
+                <button
                   onClick={handleOpenAddCharm}
-                  className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+                  className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black font-fredoka text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Upload Charm Photo 📸</span>
@@ -2973,7 +3319,7 @@ export default function AdminPage() {
                     sounds.playPop();
                     setActiveTab("charms");
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-amber-500" />
                   <span>Manage Charms ({charms ? charms.length : 0})</span>
@@ -2988,6 +3334,7 @@ export default function AdminPage() {
                 isAdminMode={true}
                 onAddAsProduct={handleStudioAddAsProduct}
                 onOpenAddCharmModal={handleOpenAddCharm}
+                onOpenBulkCharmModal={handleTriggerBulkCharmPhotoUpload}
               />
             </div>
           </div>
@@ -4613,6 +4960,308 @@ export default function AdminPage() {
                   <span>Deploy Voucher to Store</span>
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ==================================================== */}
+      {/* MODAL: BULK UPLOAD ITALY CHARMS (10+ PHOTOS)        */}
+      {/* ==================================================== */}
+      <AnimatePresence>
+        {bulkCharmModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border-2 border-emerald-500/50 dark:border-emerald-500/40 rounded-3xl p-4 sm:p-7 shadow-2xl text-slate-900 dark:text-white max-h-[92vh] flex flex-col pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
+            >
+              <button
+                onClick={() => setBulkCharmModalOpen(false)}
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors z-10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-600 to-green-600 text-white flex items-center justify-center shadow-md">
+                  <Images className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+                    Bulk Charm Upload 🔗 (Italy Modular Bracelet)
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Upload multiple charm photos at once. Each photo creates a distinct charm link with automatic transparent-border trimming and modular link downscaling.
+                  </p>
+                </div>
+              </div>
+
+              {/* Empty state if 0 items */}
+              {bulkCharmItems.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-950/50">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 shadow-inner">
+                    <Images className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <h3 className="text-lg font-black font-fredoka text-slate-800 dark:text-slate-200 mb-1">
+                    No Charm Photos Selected Yet
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+                    Pick 10, 20 or more charm photos from your phone or computer. The system automatically creates a charm element for each photo with clean names, unique codes, and optimal sizing!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleTriggerBulkCharmPhotoUpload}
+                    className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black font-fredoka text-sm shadow-xl hover:scale-102 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Select Multiple Charm Photos (10+)</span>
+                  </button>
+                  {bulkCharmIsProcessing && (
+                    <div className="flex items-center gap-2 mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Optimizing and trimming charm photos...</span>
+                    </div>
+                  )}
+                  <p className="text-[11px] text-slate-400 mt-3">
+                    Tip: Hold Shift or Ctrl/Cmd to select multiple images from your photo gallery.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Batch Apply Actions Toolbar */}
+                  <div className="p-3 sm:p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 mb-3 flex flex-col gap-2.5 flex-shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-black font-fredoka shadow-xs">
+                          {bulkCharmItems.length} Charms in Batch
+                        </span>
+                        <span className="text-xs text-emerald-800 dark:text-emerald-300 font-bold hidden sm:inline">
+                          Batch Controls (Quickly set category & price for all):
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleTriggerBulkCharmPhotoUpload}
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 font-black font-fredoka text-xs border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Add More Charms</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Clear all draft charms in this batch?")) {
+                              setBulkCharmItems([]);
+                              sounds.playPop();
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Batch Inputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-900/40">
+                      {/* Set category for all */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          Category:
+                        </span>
+                        <select
+                          value={bulkCharmGlobalCat}
+                          onChange={(e) => setBulkCharmGlobalCat(e.target.value)}
+                          className="flex-1 px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 text-slate-800 dark:text-slate-200 outline-none"
+                        >
+                          <option value="emblem">Emblem (Standard)</option>
+                          <option value="cute">Cute (Chibi / Kawaii)</option>
+                          <option value="stone">Stone / Zircon</option>
+                          <option value="anime">Anime / Game</option>
+                          <option value="letter">Letter / Alphabet</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={handleApplyCharmCatToAll}
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black font-fredoka active:scale-95 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          Apply All
+                        </button>
+                      </div>
+
+                      {/* Set price for all */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          Price ($):
+                        </span>
+                        <input
+                          type="number"
+                          step="0.10"
+                          min="0.1"
+                          value={bulkCharmGlobalPrice}
+                          onChange={(e) => setBulkCharmGlobalPrice(e.target.value)}
+                          placeholder="1.50"
+                          className="w-24 px-2.5 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 text-slate-800 dark:text-slate-200 outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCharmPriceToAll}
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black font-fredoka active:scale-95 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          Apply All
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Charms Grid */}
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-3 max-h-[50vh] sm:max-h-[55vh] scrollbar-thin">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {bulkCharmItems.map((item, index) => (
+                        <div
+                          key={item.tempId}
+                          className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-700/60 transition-all flex gap-3 relative group"
+                        >
+                          {/* Left: Charm Preview & Replace Photo */}
+                          <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                            <div className="relative w-16 h-14 sm:w-20 sm:h-16 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 p-1 flex items-center justify-center overflow-hidden shadow-inner">
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-contain p-1"
+                                unoptimized={item.image.startsWith("data:")}
+                              />
+                            </div>
+                            <label className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-0.5">
+                              <span>Change</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleReplaceSingleCharmPhoto(index, f);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Right: Editable Fields */}
+                          <div className="flex-1 min-w-0 space-y-2">
+                            {/* Row 1: Code & Remove Button */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  Code:
+                                </span>
+                                <input
+                                  type="text"
+                                  value={item.code}
+                                  onChange={(e) => updateBulkCharmItem(index, { code: e.target.value.toUpperCase() })}
+                                  placeholder="CODE"
+                                  className="w-20 px-2 py-0.5 text-xs font-mono font-black uppercase rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 outline-none"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeBulkCharmItem(index)}
+                                className="w-7 h-7 rounded-lg text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/60 flex items-center justify-center transition-colors cursor-pointer"
+                                title="Remove charm from batch"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Row 2: Name */}
+                            <div>
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => updateBulkCharmItem(index, { name: e.target.value, nameKh: e.target.value })}
+                                placeholder="Charm Name (e.g. Kuromi Cute)"
+                                className="w-full px-2.5 py-1 text-xs font-bold rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                              />
+                            </div>
+
+                            {/* Row 3: Category, Price & Popular */}
+                            <div className="grid grid-cols-3 gap-1.5">
+                              <div>
+                                <select
+                                  value={item.category}
+                                  onChange={(e) => updateBulkCharmItem(index, { category: e.target.value })}
+                                  className="w-full px-1.5 py-1 text-[11px] rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none"
+                                >
+                                  <option value="emblem">Emblem</option>
+                                  <option value="cute">Cute</option>
+                                  <option value="stone">Stone</option>
+                                  <option value="anime">Anime</option>
+                                  <option value="letter">Letter</option>
+                                </select>
+                              </div>
+                              <div>
+                                <input
+                                  type="number"
+                                  step="0.10"
+                                  min="0.1"
+                                  value={item.price}
+                                  onChange={(e) => updateBulkCharmItem(index, { price: e.target.value })}
+                                  placeholder="$1.50"
+                                  className="w-full px-1.5 py-1 text-[11px] font-mono rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white outline-none"
+                                />
+                              </div>
+                              <label className="flex items-center justify-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 cursor-pointer bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-1 py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={item.isPopular}
+                                  onChange={(e) => updateBulkCharmItem(index, { isPopular: e.target.checked })}
+                                  className="rounded text-emerald-600"
+                                />
+                                <span>HOT 🔥</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Modal Bottom Footer */}
+                  <div className="pt-3 sm:pt-4 mt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setBulkCharmModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Save as Draft & Close
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveAllBulkCharms}
+                      disabled={bulkCharmIsSubmitting || bulkCharmItems.length === 0}
+                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black font-fredoka text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center gap-2 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {bulkCharmIsSubmitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Publishing {bulkCharmItems.length} Charms...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 text-amber-300" />
+                          <span>Publish All ({bulkCharmItems.length}) Charms to Studio ✨</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

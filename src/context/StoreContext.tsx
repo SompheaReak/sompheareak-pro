@@ -91,6 +91,7 @@ interface StoreContextType {
   // Italy Modular Charms Management
   charms: Charm[];
   addCharm: (charm: Omit<Charm, "id">) => Charm;
+  bulkAddCharms: (newCharms: Array<Omit<Charm, "id"> & { id?: string }>) => Promise<Charm[]>;
   updateCharm: (id: string, updates: Partial<Charm>) => void;
   deleteCharm: (id: string) => void;
   resetCharms: () => void;
@@ -1086,6 +1087,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return charm;
   }, [charms]);
 
+  const bulkAddCharms = useCallback(
+    async (newCharms: Array<Omit<Charm, "id"> & { id?: string }>): Promise<Charm[]> => {
+      const createdList: Charm[] = [];
+      const currentList = [...charms];
+
+      for (let i = 0; i < newCharms.length; i++) {
+        const nc = newCharms[i];
+        const id = nc.id || `charm-${Date.now()}-${i}-${Math.floor(Math.random() * 1000)}`;
+        const code = nc.code || generateUniqueCharmCode(nc, [...createdList, ...currentList]);
+        const charm: Charm = {
+          ...nc,
+          id,
+          code,
+          name: (nc.name || "Custom Charm").trim(),
+          nameKh: (nc.nameKh || nc.name || "ផ្លាកម៉ូឌុល").trim(),
+          category: nc.category || "emblem",
+          price: Number(nc.price) || 1.5,
+          image: nc.image || "/assets/charm_clean.png",
+          plateImage: nc.plateImage || nc.image || "/assets/charm_clean.png",
+          isPopular: Boolean(nc.isPopular),
+          description: nc.description || "",
+        };
+        createdList.push(charm);
+      }
+
+      let finalCharms: Charm[] = [];
+      setCharmsState((prev) => {
+        finalCharms = ensureUniqueCharmCodes([...createdList, ...prev]);
+        safeSetItem("somphea_charms", JSON.stringify(finalCharms));
+        neonSetKey("charms", finalCharms);
+        return finalCharms;
+      });
+
+      try {
+        await fetch("/api/charms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "bulk", charms: createdList }),
+        });
+      } catch {}
+
+      return finalCharms;
+    },
+    [charms]
+  );
+
   const updateCharm = useCallback((id: string, updates: Partial<Charm>) => {
     setCharmsState((prev) => {
       const target = prev.find((c) => c.id === id);
@@ -1722,6 +1769,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         wipeAllProducts,
         charms,
         addCharm,
+        bulkAddCharms,
         updateCharm,
         deleteCharm,
         resetCharms,
