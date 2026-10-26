@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, CheckCircle2, ShieldCheck, MapPin, Phone, User, MessageCircle, Receipt } from "lucide-react";
@@ -27,6 +27,7 @@ export const CheckoutModal: React.FC = () => {
     addPoints,
     saveOrder,
     setSelectedReceiptOrder,
+    customerUser,
     t,
   } = useStore();
 
@@ -38,6 +39,19 @@ export const CheckoutModal: React.FC = () => {
     address: "",
     paymentMethod: "cod",
   });
+
+  useEffect(() => {
+    if (customerUser) {
+      setForm((prev) => ({
+        ...prev,
+        fullName: prev.fullName || customerUser.name || "",
+        phone: prev.phone || customerUser.phone || "",
+        telegramHandle: prev.telegramHandle || customerUser.telegramHandle || "",
+        province: prev.province || customerUser.province || "Phnom Penh",
+        address: prev.address || customerUser.address || "",
+      }));
+    }
+  }, [customerUser]);
 
   const [submittedOrder, setSubmittedOrder] = useState<{
     orderRef: string;
@@ -143,8 +157,8 @@ export const CheckoutModal: React.FC = () => {
 
     saveOrder(newOrder);
 
-    // Save orderRef in client storage to auto-credit points when confirmed
-    if (typeof window !== "undefined") {
+    // Only save orderRef on device if customer is signed in and opted to remember
+    if (customerUser && customerUser.rememberMe && typeof window !== "undefined") {
       try {
         const stored = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
         localStorage.setItem("somphea_my_order_refs", JSON.stringify([...stored, orderRef]));

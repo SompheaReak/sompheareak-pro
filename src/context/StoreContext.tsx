@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
   CartItem,
   Currency,
@@ -271,6 +271,8 @@ export const hydrateOrdersFromStorage = (orders: CustomerOrder[], allCharms: Cha
 // Safe localStorage helper to prevent QuotaExceededError from crashing the app
 export const safeSetItem = (key: string, value: string): boolean => {
   if (typeof window === "undefined") return false;
+  // Strictly prevent writing full store orders to device localStorage
+  if (key === "somphea_orders") return false;
   try {
     localStorage.setItem(key, value);
     return true;
@@ -391,6 +393,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Customer Account & Remember System
   const [customerUser, setCustomerUserState] = useState<CustomerAccount | null>(null);
+  const customerUserRef = useRef<CustomerAccount | null>(null);
+  useEffect(() => {
+    customerUserRef.current = customerUser;
+  }, [customerUser]);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [orderHistoryModalOpen, setOrderHistoryModalOpen] = useState(false);
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState<CustomerOrder | null>(null);
@@ -463,8 +469,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const savedAccount = localStorage.getItem("somphea_customer_account");
         if (savedAccount) {
           try {
-            setCustomerUserState(JSON.parse(savedAccount));
+            const parsed = JSON.parse(savedAccount);
+            setCustomerUserState(parsed);
+            customerUserRef.current = parsed;
           } catch {}
+        } else {
+          // Immediately wipe any legacy guest order caches from device
+          localStorage.removeItem("somphea_orders");
+          localStorage.removeItem("somphea_my_order_refs");
+          localStorage.removeItem("somphea_credited_order_refs");
+          localStorage.removeItem("somphea_customer_orders");
         }
 
         // Direct real-time Neon PostgreSQL Database Synchronization
@@ -584,41 +598,75 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           });
 
-          neonGetKey<CustomerOrder[]>("orders", []).then((loadedOrders) => {
-            if (Array.isArray(loadedOrders)) {
-              const hydrated = hydrateOrdersFromStorage(loadedOrders, CHARMS);
-              setOrdersState(hydrated);
+          // Orders Synchronization:
+          // Strictly protect customer privacy.
+          // 1. Admin receives all orders for order fulfillment.
+          // 2. Authenticated customer receives ONLY their personal orders (filtered by phone/name).
+          // 3. Unauthenticated guest receives ZERO orders and nothing is saved on their device.
+          const isAuthAdmin =
+            sessionStorage.getItem("somphea_admin_auth") === "true" ||
+            window.location.pathname.startsWith("/admin") ||
+            window.location.pathname.startsWith("/admin-panel");
 
-              // Auto-credit points to customer account if their placed orders were confirmed by store
-              if (typeof window !== "undefined") {
-                try {
-                  const myRefs: string[] = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
-                  const creditedRefs: string[] = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
-                  let pointsToAdd = 0;
-                  const newCredited = [...creditedRefs];
+          const currentCust = customerUserRef.current;
 
-                  hydrated.forEach((ord) => {
-                    const isMyOrder = myRefs.includes(ord.orderRef);
-                    const isConfirmed = ["confirmed", "packaging", "shipped", "delivered"].includes(ord.status);
-                    if (isMyOrder && isConfirmed && !creditedRefs.includes(ord.orderRef)) {
-                      pointsToAdd += ord.pointsEarned || 0;
-                      newCredited.push(ord.orderRef);
-                    }
-                  });
-
-                  if (pointsToAdd > 0) {
-                    setUserPoints((prev) => {
-                      const next = prev + pointsToAdd;
-                      safeSetItem("somphea_points", String(next));
-                      return next;
-                    });
-                    safeSetItem("somphea_credited_order_refs", JSON.stringify(newCredited));
-                    sounds.playFanfare();
-                  }
-                } catch {}
+          if (isAuthAdmin) {
+            neonGetKey<CustomerOrder[]>("orders", []).then((loadedOrders) => {
+              if (Array.isArray(loadedOrders)) {
+                const hydrated = hydrateOrdersFromStorage(loadedOrders, CHARMS);
+                setOrdersState(hydrated);
               }
+            });
+          } else if (currentCust && (currentCust.phone || currentCust.name)) {
+            neonGetKey<CustomerOrder[]>("orders", []).then((loadedOrders) => {
+              if (Array.isArray(loadedOrders)) {
+                const userPhone = currentCust.phone?.trim();
+                const userName = currentCust.name?.toLowerCase().trim();
+                const userOrders = loadedOrders.filter((ord) => {
+                  const matchPhone = Boolean(userPhone && ord.customerPhone?.trim() === userPhone);
+                  const matchName = Boolean(userName && ord.customerName?.toLowerCase().trim() === userName);
+                  return matchPhone || matchName;
+                });
+                const hydrated = hydrateOrdersFromStorage(userOrders, CHARMS);
+                setOrdersState(hydrated);
+
+                // Auto-credit points to customer account if their placed orders were confirmed by store
+                if (currentCust.rememberMe && typeof window !== "undefined") {
+                  try {
+                    const creditedRefs: string[] = JSON.parse(localStorage.getItem("somphea_credited_order_refs") || "[]");
+                    let pointsToAdd = 0;
+                    const newCredited = [...creditedRefs];
+
+                    hydrated.forEach((ord) => {
+                      const isConfirmed = ["confirmed", "packaging", "shipped", "delivered"].includes(ord.status);
+                      if (isConfirmed && !creditedRefs.includes(ord.orderRef)) {
+                        pointsToAdd += ord.pointsEarned || 0;
+                        newCredited.push(ord.orderRef);
+                      }
+                    });
+
+                    if (pointsToAdd > 0) {
+                      setUserPoints((prev) => {
+                        const next = prev + pointsToAdd;
+                        safeSetItem("somphea_points", String(next));
+                        return next;
+                      });
+                      safeSetItem("somphea_credited_order_refs", JSON.stringify(newCredited));
+                      sounds.playFanfare();
+                    }
+                  } catch {}
+                }
+              }
+            });
+          } else {
+            // Guest customer: NEVER load or display orders on device
+            setOrdersState([]);
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("somphea_orders");
+              localStorage.removeItem("somphea_my_order_refs");
+              localStorage.removeItem("somphea_credited_order_refs");
             }
-          });
+          }
 
           neonGetKey<OrderNotification[]>("notifications", []).then((loadedNotifs) => {
             if (Array.isArray(loadedNotifs)) {
@@ -1098,15 +1146,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Customer Orders Management with Direct Neon DB Persistence
   const saveOrder = useCallback((order: CustomerOrder) => {
-    setOrdersState((prev) => {
-      const updated = [order, ...prev];
-      safeSetItem("somphea_orders", JSON.stringify(compactOrdersForStorage(updated)));
-      neonGetKey<CustomerOrder[]>("orders", []).then((current) => {
-        const nextOrders = [order, ...(Array.isArray(current) ? current.filter((o) => o.id !== order.id) : [])];
-        neonSetKey("orders", nextOrders);
-      });
-      return updated;
+    // 1. Persist to Neon DB backend (for store order fulfillment)
+    neonGetKey<CustomerOrder[]>("orders", []).then((current) => {
+      const nextOrders = [order, ...(Array.isArray(current) ? current.filter((o) => o.id !== order.id) : [])];
+      neonSetKey("orders", nextOrders);
     });
+
+    // 2. Persist to API
+    apiFetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    }).catch(() => {});
+
+    // 3. Update local state ONLY if admin or authenticated customer
+    const isAuthAdmin =
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("somphea_admin_auth") === "true" ||
+        window.location.pathname.startsWith("/admin") ||
+        window.location.pathname.startsWith("/admin-panel"));
+
+    const currentCust = customerUserRef.current;
+
+    if (isAuthAdmin) {
+      setOrdersState((prev) => [order, ...prev.filter((o) => o.id !== order.id)]);
+    } else if (currentCust) {
+      setOrdersState((prev) => [order, ...prev.filter((o) => o.id !== order.id)]);
+      if (currentCust.rememberMe && typeof window !== "undefined") {
+        try {
+          const myRefs: string[] = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
+          if (!myRefs.includes(order.orderRef)) {
+            localStorage.setItem("somphea_my_order_refs", JSON.stringify([...myRefs, order.orderRef]));
+          }
+        } catch {}
+      }
+    } else {
+      // Guest: do NOT record to device history or localStorage
+      setOrdersState([]);
+    }
 
     // Trigger confirmation notification immediately
     const notif: OrderNotification = {
@@ -1125,13 +1202,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return nextNotifs;
     });
     setLatestNotificationToast(notif);
-
-    // Sync to backend DB
-    apiFetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(order),
-    }).catch(() => {});
   }, []);
 
   const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
@@ -1541,12 +1611,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       rememberMe: data.rememberMe ?? true,
       createdAt: new Date().toISOString(),
     };
+    customerUserRef.current = account;
     setCustomerUserState(account);
     if (account.rememberMe) {
       safeSetItem("somphea_customer_account", JSON.stringify(account));
     } else {
       localStorage.removeItem("somphea_customer_account");
     }
+
+    // Immediately load orders for this authenticated customer
+    neonGetKey<CustomerOrder[]>("orders", []).then((loadedOrders) => {
+      if (Array.isArray(loadedOrders)) {
+        const userPhone = account.phone.trim();
+        const userName = account.name.toLowerCase().trim();
+        const userOrders = loadedOrders.filter((ord) => {
+          const matchPhone = Boolean(userPhone && ord.customerPhone?.trim() === userPhone);
+          const matchName = Boolean(userName && ord.customerName?.toLowerCase().trim() === userName);
+          return matchPhone || matchName;
+        });
+        setOrdersState(hydrateOrdersFromStorage(userOrders, CHARMS));
+      }
+    });
+
     sounds.playFanfare();
     confetti({
       particleCount: 60,
@@ -1557,8 +1643,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const logoutCustomer = useCallback(() => {
     sounds.playPop();
+    customerUserRef.current = null;
     setCustomerUserState(null);
-    localStorage.removeItem("somphea_customer_account");
+    setOrdersState([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("somphea_customer_account");
+      localStorage.removeItem("somphea_orders");
+      localStorage.removeItem("somphea_my_order_refs");
+      localStorage.removeItem("somphea_credited_order_refs");
+      localStorage.removeItem("somphea_customer_orders");
+    }
   }, []);
 
   const updateCustomerProfile = useCallback((updates: Partial<CustomerAccount>) => {

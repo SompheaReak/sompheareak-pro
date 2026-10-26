@@ -20,6 +20,7 @@ import {
   Phone,
   User,
   ShoppingBag,
+  ShieldCheck,
 } from "lucide-react";
 
 export const OrderHistoryModal: React.FC = () => {
@@ -37,22 +38,87 @@ export const OrderHistoryModal: React.FC = () => {
 
   if (!orderHistoryModalOpen) return null;
 
-  // Filter orders based on customerUser profile or search term
-  const filteredOrders = orders.filter((ord) => {
-    // If search term entered, search across ref, phone, name
+  // STRICT PRIVACY GATE: Customers MUST sign in to view and record order history
+  if (!customerUser) {
+    return (
+      <AnimatePresence>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-md bg-white dark:bg-slate-900 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-white text-center space-y-5"
+          >
+            {/* Close button */}
+            <button
+              onClick={() => {
+                sounds.playPop();
+                setOrderHistoryModalOpen(false);
+              }}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Shield Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-toy-green-glow">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black font-fredoka text-slate-900 dark:text-white">
+                Customer Sign In Required
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                Order history and receipts are strictly private. Please sign in with your customer account to view your past orders, download receipts, and track deliveries.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2.5">
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  setOrderHistoryModalOpen(false);
+                  setAccountModalOpen(true);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm font-fredoka shadow-toy-green-glow flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In / Create Account</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  setOrderHistoryModalOpen(false);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </AnimatePresence>
+    );
+  }
+
+  // Filter orders strictly for the authenticated customerUser
+  const userPhone = customerUser.phone.trim();
+  const userName = customerUser.name.toLowerCase().trim();
+  const myOrders = orders.filter((ord) => {
+    const matchPhone = Boolean(userPhone && ord.customerPhone.trim() === userPhone);
+    const matchName = Boolean(userName && ord.customerName.toLowerCase().trim() === userName);
+    return matchPhone || matchName;
+  });
+
+  const filteredOrders = myOrders.filter((ord) => {
+    // If search term entered, search across ref, items
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase().trim();
       const matchRef = ord.orderRef.toLowerCase().includes(q);
-      const matchPhone = ord.customerPhone.includes(q);
-      const matchName = ord.customerName.toLowerCase().includes(q);
-      if (!matchRef && !matchPhone && !matchName) return false;
-    } else if (customerUser) {
-      // If no search term and customer is logged in, show their orders
-      const userPhone = customerUser.phone.trim();
-      const userName = customerUser.name.toLowerCase().trim();
-      const matchesPhone = userPhone && ord.customerPhone.includes(userPhone);
-      const matchesName = userName && ord.customerName.toLowerCase().includes(userName);
-      if (!matchesPhone && !matchesName) return false;
+      const matchItem = ord.items.some((it) => it.product?.name.toLowerCase().includes(q));
+      if (!matchRef && !matchItem) return false;
     }
 
     // Status filter
@@ -184,25 +250,13 @@ export const OrderHistoryModal: React.FC = () => {
             <div className="py-12 text-center rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 p-6 space-y-3">
               <Receipt className="w-12 h-12 mx-auto text-slate-400" />
               <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                No orders match your search
+                {myOrders.length === 0 ? "No orders recorded yet" : "No orders match your filter"}
               </h4>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {customerUser
-                  ? "You don't have any orders matching this filter. Place your first toy drop order now!"
-                  : "Try entering your exact phone number or order reference (e.g. SR-8491), or sign in with your account."}
+                {myOrders.length === 0
+                  ? `You haven't placed any orders with this account yet (${customerUser.phone}). Place an order to view itemized receipts and earn VIP points!`
+                  : "Try clearing your search term or selecting 'All' statuses."}
               </p>
-              {!customerUser && (
-                <button
-                  onClick={() => {
-                    sounds.playPop();
-                    setAccountModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-md mt-2"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span>Sign In with Account</span>
-                </button>
-              )}
             </div>
           ) : (
             <div className="space-y-3">

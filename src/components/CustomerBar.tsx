@@ -27,14 +27,14 @@ export const CustomerBar: React.FC = () => {
 
   const [isRotating, setIsRotating] = useState(false);
 
-  // Calculate order count for user
+  // Calculate order count for user (0 if not logged in)
   const userOrdersCount = customerUser
     ? orders.filter(
         (o) =>
           (customerUser.phone && o.customerPhone === customerUser.phone) ||
           (customerUser.name && o.customerName.toLowerCase().includes(customerUser.name.toLowerCase()))
       ).length
-    : orders.length;
+    : 0;
 
   const handleLogoClick = () => {
     sounds.playFanfare();

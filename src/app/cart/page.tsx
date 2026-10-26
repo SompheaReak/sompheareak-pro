@@ -220,8 +220,8 @@ export default function CartPage() {
 
     saveOrder(newOrder);
 
-    // Save orderRef in client storage to auto-credit points when confirmed
-    if (typeof window !== "undefined") {
+    // Only save orderRef on device if customer is signed in and opted to remember
+    if (customerUser && customerUser.rememberMe && typeof window !== "undefined") {
       try {
         const stored = JSON.parse(localStorage.getItem("somphea_my_order_refs") || "[]");
         localStorage.setItem("somphea_my_order_refs", JSON.stringify([...stored, orderRef]));
